@@ -203,6 +203,7 @@ class VexorApp(App):
 
     BINDINGS = [
         Binding("ctrl+q", "quit", "Quit", priority=True),
+        Binding("escape", "quit", "Quit", priority=True),
         Binding("f1", "show_screen('dashboard')", "Dashboard"),
         Binding("f2", "show_screen('proxy')", "Proxy"),
         Binding("f3", "show_screen('scanner')", "Scanner"),

