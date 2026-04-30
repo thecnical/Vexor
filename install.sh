@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 #  VEXOR — AI-Powered CLI Security Toolkit
-#  Installation Script
+#  Installation Script v1.0.0
 #  Created by Chandan Pandey (Technical)
 # ═══════════════════════════════════════════════════════════════
 
@@ -35,14 +35,14 @@ echo ""
 # ─── OS Check ───────────────────────────────────────────────
 if [[ "$OSTYPE" != "linux-gnu"* ]] && [[ "$OSTYPE" != "linux-musl"* ]]; then
     echo -e "${YELLOW}[!] Non-Linux detected. Vexor runs on Linux/WSL only.${NC}"
-    echo -e "${YELLOW}    Windows users: Install WSL → wsl --install${NC}"
-    echo ""
 fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ─── Python Check ───────────────────────────────────────────
 echo -e "${CYAN}[1/8] Checking Python 3.11+...${NC}"
 PYTHON_CMD=""
-for cmd in python3.12 python3.11 python3.13 python3; do
+for cmd in python3.13 python3.12 python3.11 python3; do
     if command -v "$cmd" &>/dev/null; then
         VER=$($cmd -c "import sys; print(sys.version_info >= (3,11))" 2>/dev/null)
         if [[ "$VER" == "True" ]]; then
@@ -55,12 +55,24 @@ done
 if [[ -z "$PYTHON_CMD" ]]; then
     echo -e "${YELLOW}[!] Python 3.11+ not found. Installing...${NC}"
     sudo apt-get update -qq
-    sudo apt-get install -y python3.11 python3.11-pip python3.11-venv 2>/dev/null || \
     sudo apt-get install -y python3 python3-pip python3-venv
     PYTHON_CMD="python3"
 fi
 
-echo -e "${GREEN}    ✓ $($PYTHON_CMD --version)${NC}"
+PYTHON_VER=$($PYTHON_CMD --version 2>&1)
+echo -e "${GREEN}    ✓ $PYTHON_VER${NC}"
+
+# ─── Detect pip install method ──────────────────────────────
+# Kali Linux 2024+ uses externally-managed Python
+# We use --break-system-packages to bypass this
+PIP_FLAGS=""
+if $PYTHON_CMD -m pip install --help 2>&1 | grep -q "break-system-packages" || \
+   $PYTHON_CMD -m pip install pip 2>&1 | grep -q "externally-managed"; then
+    PIP_FLAGS="--break-system-packages"
+    echo -e "${YELLOW}    ! Externally-managed Python detected (Kali/Debian)${NC}"
+    echo -e "${YELLOW}    ! Using --break-system-packages flag${NC}"
+fi
+
 PIP_CMD="$PYTHON_CMD -m pip"
 
 # ─── System Dependencies ────────────────────────────────────
@@ -71,6 +83,7 @@ sudo apt-get install -y -qq \
     openssl \
     libssl-dev \
     python3-dev \
+    python3-pip \
     gcc \
     g++ \
     make \
@@ -93,8 +106,17 @@ sudo apt-get install -y -qq \
 
 # ─── Upgrade pip ────────────────────────────────────────────
 echo -e "${CYAN}[3/8] Upgrading pip...${NC}"
-$PIP_CMD install --upgrade pip setuptools wheel --quiet
-echo -e "${GREEN}    ✓ pip upgraded${NC}"
+$PIP_CMD install --upgrade pip setuptools wheel $PIP_FLAGS --quiet 2>/dev/null && \
+    echo -e "${GREEN}    ✓ pip upgraded${NC}" || \
+    echo -e "${YELLOW}    ! pip upgrade skipped${NC}"
+
+# ─── pip install helper ─────────────────────────────────────
+pip_install() {
+    local pkg="$1"
+    $PIP_CMD install "$pkg" $PIP_FLAGS --quiet 2>/dev/null && \
+        echo -e "${GREEN}    ✓ $pkg${NC}" || \
+        echo -e "${YELLOW}    ! $pkg failed${NC}"
+}
 
 # ─── Core Python Dependencies ───────────────────────────────
 echo -e "${CYAN}[4/8] Installing core Python dependencies...${NC}"
@@ -121,60 +143,35 @@ CORE_DEPS=(
 )
 
 for dep in "${CORE_DEPS[@]}"; do
-    $PIP_CMD install "$dep" --quiet && \
-        echo -e "${GREEN}    ✓ $dep${NC}" || \
-        echo -e "${YELLOW}    ! $dep failed${NC}"
+    pip_install "$dep"
 done
 
 # ─── Security Tools ─────────────────────────────────────────
 echo -e "${CYAN}[5/8] Installing security tools...${NC}"
-
-# Scapy — packet crafting (world's best)
-$PIP_CMD install "scapy==2.5.0" --quiet && \
-    echo -e "${GREEN}    ✓ scapy (packet crafting)${NC}" || \
-    echo -e "${YELLOW}    ! scapy failed${NC}"
-
-# mitmproxy — HTTP proxy (world's best)
-$PIP_CMD install "mitmproxy==10.3.1" --quiet && \
-    echo -e "${GREEN}    ✓ mitmproxy (HTTP proxy)${NC}" || \
-    echo -e "${YELLOW}    ! mitmproxy failed — proxy limited${NC}"
-
-# python-nmap — port scanning
-$PIP_CMD install "python-nmap==0.7.1" --quiet && \
-    echo -e "${GREEN}    ✓ python-nmap (port scanning)${NC}" || \
-    echo -e "${YELLOW}    ! python-nmap failed${NC}"
+pip_install "scapy==2.5.0"
+pip_install "mitmproxy==10.3.1"
+pip_install "python-nmap==0.7.1"
 
 # ─── Report Tools ───────────────────────────────────────────
 echo -e "${CYAN}[6/8] Installing report tools...${NC}"
+pip_install "weasyprint==62.3"
 
-$PIP_CMD install "weasyprint==62.3" --quiet && \
-    echo -e "${GREEN}    ✓ weasyprint (PDF reports)${NC}" || \
-    echo -e "${YELLOW}    ! weasyprint failed — PDF unavailable${NC}"
+# ─── Playwright ─────────────────────────────────────────────
+echo -e "${CYAN}[7/8] Installing Playwright...${NC}"
+pip_install "playwright==1.44.0"
 
-# ─── Playwright (JS scanning) ───────────────────────────────
-echo -e "${CYAN}[7/8] Installing Playwright (JS-heavy site scanning)...${NC}"
-
-$PIP_CMD install "playwright==1.44.0" --quiet && \
-    echo -e "${GREEN}    ✓ playwright installed${NC}" || \
-    echo -e "${YELLOW}    ! playwright failed${NC}"
-
-# Install Playwright browsers
 if $PYTHON_CMD -c "import playwright" 2>/dev/null; then
-    echo -e "${CYAN}    Installing Chromium browser...${NC}"
     $PYTHON_CMD -m playwright install chromium 2>/dev/null && \
         echo -e "${GREEN}    ✓ Chromium installed${NC}" || \
         echo -e "${YELLOW}    ! Chromium install failed${NC}"
-
-    # Install system deps for Playwright
     $PYTHON_CMD -m playwright install-deps chromium 2>/dev/null || true
 fi
 
 # ─── Install Vexor ──────────────────────────────────────────
 echo -e "${CYAN}[8/8] Installing Vexor...${NC}"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/cli"
 
-$PIP_CMD install -e . --quiet && \
+$PIP_CMD install -e . $PIP_FLAGS --quiet && \
     echo -e "${GREEN}    ✓ Vexor installed${NC}" || \
     { echo -e "${RED}    ✗ Vexor install failed${NC}"; exit 1; }
 
@@ -182,7 +179,6 @@ $PIP_CMD install -e . --quiet && \
 export PATH="$HOME/.local/bin:$PATH"
 
 SHELL_RC="$HOME/.bashrc"
-[[ -n "$ZSH_VERSION" ]] && SHELL_RC="$HOME/.zshrc"
 [[ -f "$HOME/.zshrc" ]] && SHELL_RC="$HOME/.zshrc"
 
 if ! grep -q 'HOME/.local/bin' "$SHELL_RC" 2>/dev/null; then
@@ -199,36 +195,20 @@ $PYTHON_CMD -c "
 import sys
 ok = []
 fail = []
-warn = []
 
-# Required
 required = [
-    ('typer', 'typer'),
-    ('rich', 'rich'),
-    ('textual', 'textual'),
-    ('httpx', 'httpx'),
-    ('requests', 'requests'),
-    ('bs4', 'beautifulsoup4'),
-    ('lxml', 'lxml'),
-    ('jwt', 'pyjwt'),
-    ('cryptography', 'cryptography'),
-    ('OpenSSL', 'pyOpenSSL'),
-    ('jinja2', 'jinja2'),
-    ('pydantic', 'pydantic'),
-    ('dotenv', 'python-dotenv'),
-    ('dns', 'dnspython'),
-    ('websockets', 'websockets'),
-    ('sqlalchemy', 'sqlalchemy'),
-    ('aiosqlite', 'aiosqlite'),
+    ('typer','typer'), ('rich','rich'), ('textual','textual'),
+    ('httpx','httpx'), ('requests','requests'), ('bs4','beautifulsoup4'),
+    ('lxml','lxml'), ('jwt','pyjwt'), ('cryptography','cryptography'),
+    ('OpenSSL','pyOpenSSL'), ('jinja2','jinja2'), ('pydantic','pydantic'),
+    ('dotenv','python-dotenv'), ('dns','dnspython'),
+    ('websockets','websockets'), ('sqlalchemy','sqlalchemy'),
+    ('aiosqlite','aiosqlite'),
 ]
-
-# Optional
 optional = [
-    ('mitmproxy', 'mitmproxy'),
-    ('scapy', 'scapy'),
-    ('nmap', 'python-nmap'),
-    ('weasyprint', 'weasyprint'),
-    ('playwright', 'playwright'),
+    ('mitmproxy','mitmproxy'), ('scapy','scapy'),
+    ('nmap','python-nmap'), ('weasyprint','weasyprint'),
+    ('playwright','playwright'),
 ]
 
 print()
@@ -239,7 +219,7 @@ for mod, pkg in required:
         print(f'  \033[32m✓\033[0m {pkg}')
         ok.append(pkg)
     except ImportError:
-        print(f'  \033[31m✗\033[0m {pkg}  ← MISSING')
+        print(f'  \033[31m✗\033[0m {pkg}  MISSING')
         fail.append(pkg)
 
 print()
@@ -249,30 +229,14 @@ for mod, pkg in optional:
         __import__(mod)
         print(f'  \033[32m✓\033[0m {pkg}')
     except ImportError:
-        print(f'  \033[33m-\033[0m {pkg}  (not installed)')
-        warn.append(pkg)
+        print(f'  \033[33m-\033[0m {pkg}')
 
 print()
 if fail:
-    print(f'  \033[31m[!] Missing required: {fail}\033[0m')
-    print(f'      Fix: pip install {\" \".join(fail)}')
-    sys.exit(1)
+    print(f'  \033[31m[!] Missing: {fail}\033[0m')
 else:
     print(f'  \033[32m[+] All {len(ok)} required packages OK!\033[0m')
-    if warn:
-        print(f'  \033[33m[i] Optional missing: {warn}\033[0m')
 "
-
-# ─── System tools check ─────────────────────────────────────
-echo ""
-echo -e "  ${CYAN}SYSTEM TOOLS:${NC}"
-for tool in nmap openssl curl git; do
-    if command -v "$tool" &>/dev/null; then
-        echo -e "  ${GREEN}✓${NC} $tool"
-    else
-        echo -e "  ${YELLOW}!${NC} $tool not found"
-    fi
-done
 
 # ─── Done ───────────────────────────────────────────────────
 echo ""
@@ -282,7 +246,7 @@ echo ""
 if command -v vexor &>/dev/null; then
     echo -e "${GREEN}${BOLD}  ✓ VEXOR INSTALLED SUCCESSFULLY!${NC}"
     echo ""
-    echo -e "  ${CYAN}Version:${NC} $(vexor --version 2>/dev/null || echo '1.0.0')"
+    echo -e "  ${CYAN}Version:${NC} $(vexor --version 2>/dev/null || echo 'v1.0.0')"
 else
     echo -e "${YELLOW}  Run: source ~/.bashrc  then: vexor${NC}"
 fi
@@ -291,13 +255,12 @@ echo ""
 echo -e "${MAGENTA}  COMMANDS:${NC}"
 echo -e "  ${GREEN}vexor${NC}                      → Launch TUI"
 echo -e "  ${GREEN}vexor scan <url>${NC}           → Quick scan"
-echo -e "  ${GREEN}vexor scan <url> --full${NC}    → Full scan (25 modules)"
-echo -e "  ${GREEN}vexor scan <url> --module sqli${NC} → Single module"
-echo -e "  ${GREEN}vexor proxy${NC}                → Start HTTP proxy"
-echo -e "  ${GREEN}vexor auth login${NC}           → Login to backend"
+echo -e "  ${GREEN}vexor scan <url> --full${NC}    → Full scan"
+echo -e "  ${GREEN}vexor proxy${NC}                → Start proxy"
+echo -e "  ${GREEN}vexor auth login${NC}           → Login"
+echo -e "  ${GREEN}vexor update${NC}               → Update Vexor"
 echo -e "  ${GREEN}vexor --offline${NC}            → Offline mode"
-echo -e "  ${GREEN}vexor --help${NC}               → Full help"
+echo -e "  ${GREEN}vexor --help${NC}               → Help"
 echo ""
 echo -e "${DIM}  Created by Chandan Pandey (Technical)${NC}"
-echo -e "${DIM}  Penetrate. Analyze. Dominate.${NC}"
 echo ""

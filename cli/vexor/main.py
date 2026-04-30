@@ -7,6 +7,7 @@ import typer
 import asyncio
 import httpx
 from typing import Optional
+from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -367,7 +368,96 @@ async def _handle_auth(action: str, email: Optional[str], password: Optional[str
 
 
 @app.command()
-def report(
+def update():
+    """
+    [bold]Update Vexor to latest version[/]
+
+    Pulls latest code from GitHub and reinstalls.
+    """
+    show_banner()
+    console.print("[bright_cyan]◈ UPDATER[/]  Checking for updates...")
+
+    import subprocess
+    import sys
+
+    # Find Vexor install location
+    try:
+        import vexor
+        vexor_path = Path(vexor.__file__).parent.parent.parent
+        repo_path = None
+
+        # Check if it's a git repo
+        git_dir = vexor_path / ".git"
+        if not git_dir.exists():
+            # Try parent directories
+            for parent in vexor_path.parents:
+                if (parent / ".git").exists():
+                    repo_path = parent
+                    break
+        else:
+            repo_path = vexor_path
+
+        if repo_path:
+            console.print(f"[dim]  Repo found at: {repo_path}[/]")
+            console.print("[bright_cyan]  Pulling latest changes...[/]")
+
+            result = subprocess.run(
+                ["git", "pull", "origin", "main"],
+                cwd=str(repo_path),
+                capture_output=True, text=True
+            )
+
+            if result.returncode == 0:
+                console.print(f"[bright_green]  ✓ {result.stdout.strip()}[/]")
+            else:
+                console.print(f"[bright_yellow]  ! {result.stderr.strip()}[/]")
+
+            # Reinstall
+            console.print("[bright_cyan]  Reinstalling Vexor...[/]")
+            cli_path = repo_path / "cli"
+            if cli_path.exists():
+                # Detect if --break-system-packages needed
+                pip_flags = []
+                test = subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "--help"],
+                    capture_output=True, text=True
+                )
+                if "break-system-packages" in test.stdout:
+                    pip_flags = ["--break-system-packages"]
+
+                result2 = subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "-e", ".", "--quiet"] + pip_flags,
+                    cwd=str(cli_path),
+                    capture_output=True, text=True
+                )
+                if result2.returncode == 0:
+                    console.print("[bright_green]  ✓ Vexor updated successfully![/]")
+                    console.print(f"[dim]  Restart vexor to use new version[/]")
+                else:
+                    console.print(f"[bright_red]  ✗ Reinstall failed: {result2.stderr[:100]}[/]")
+            else:
+                console.print("[bright_yellow]  ! cli/ directory not found[/]")
+        else:
+            # No git repo — clone fresh
+            console.print("[bright_yellow]  ! Not a git repo. Cloning fresh...[/]")
+            home = Path.home()
+            clone_path = home / "Vexor"
+
+            if clone_path.exists():
+                subprocess.run(["git", "pull"], cwd=str(clone_path))
+            else:
+                subprocess.run([
+                    "git", "clone",
+                    "https://github.com/thecnical/Vexor",
+                    str(clone_path)
+                ])
+
+            console.print(f"[bright_green]  ✓ Updated at {clone_path}[/]")
+            console.print(f"[dim]  Run: cd {clone_path} && ./install.sh[/]")
+
+    except Exception as e:
+        console.print(f"[bright_red]  Update error: {str(e)}[/]")
+        console.print("[dim]  Manual update: cd ~/Vexor && git pull && ./install.sh[/]")
     format: str = typer.Option("html", "--format", "-f", help="html/pdf/json"),
     output: Optional[str] = typer.Option(None, "--output", "-o", help="Output path"),
     session: Optional[str] = typer.Option(None, "--session", "-s", help="Session name"),
