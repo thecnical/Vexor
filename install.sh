@@ -68,6 +68,7 @@ APT_PKGS=(
     python3-aiofiles
     python3-scapy
     mitmproxy
+    python3-mitmproxy
     # System tools
     nmap
     openssl

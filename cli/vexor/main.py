@@ -115,6 +115,7 @@ async def _run_scan(
             "rate_limit", "open_redirect", "session_analyzer",
             "sensitive_data", "auth_bypass", "cve_lookup",
             "wayback", "github_dork",
+            "osint", "blind_scanner",
         ]
     else:
         modules_to_run = ["sqli", "xss", "headers", "cors", "ssl_analyzer"]

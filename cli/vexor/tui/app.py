@@ -19,6 +19,7 @@ from vexor.tui.screens.ai_screen import AIScreen
 from vexor.tui.screens.reports_screen import ReportsScreen
 from vexor.tui.screens.decoder_screen import DecoderScreen
 from vexor.tui.screens.comparer_screen import ComparerScreen
+from vexor.tui.screens.osint_screen import OSINTScreen
 from vexor.tui.widgets.header import VexorHeader
 from vexor.tui.widgets.sidebar import VexorSidebar
 from vexor.tui.widgets.status_bar import VexorStatusBar
@@ -200,6 +201,7 @@ class VexorApp(App):
         Binding("f7", "show_reports", "Reports"),
         Binding("f8", "show_decoder", "Decoder"),
         Binding("f9", "show_comparer", "Comparer"),
+        Binding("f10", "show_osint", "OSINT"),
         Binding("ctrl+h", "show_help", "Help"),
         Binding("ctrl+o", "toggle_offline", "Offline"),
     ]
@@ -257,6 +259,9 @@ class VexorApp(App):
 
     def action_show_comparer(self) -> None:
         self._switch_screen("comparer", ComparerScreen)
+
+    def action_show_osint(self) -> None:
+        self._switch_screen("osint", OSINTScreen)
 
     def action_show_help(self) -> None:
         self.push_screen(HelpScreen())
