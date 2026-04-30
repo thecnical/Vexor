@@ -137,30 +137,70 @@ class IntruderScreen(Widget):
             self.notify("Enter URL and payloads", severity="error")
             return
 
-        self.attacking = True
-        log.write_line(f"[*] Starting attack on {url} with {len(payloads)} payloads...")
+        # Normalize URL
+        if not url.startswith("http"):
+            url = f"https://{url}"
 
-        import httpx, time
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:
-            for i, payload in enumerate(payloads):
+        self.attacking = True
+        log.write_line(f"[*] Starting attack on {url}")
+        log.write_line(f"[*] {len(payloads)} payloads | 20 concurrent workers")
+
+        import httpx
+        import time
+
+        # Use semaphore for concurrent requests (20 workers = very fast)
+        semaphore = asyncio.Semaphore(20)
+        results = []
+
+        async def attack_single(i: int, payload: str):
+            async with semaphore:
                 if not self.attacking:
-                    break
+                    return
                 start = time.time()
                 try:
-                    response = await client.post(url, data={"payload": payload})
-                    elapsed = int((time.time() - start) * 1000)
-                    interesting = "⚠️" if response.status_code not in [400, 401, 403, 404] else ""
-                    table.add_row(
-                        str(i + 1), payload[:25],
-                        f"[bright_green]{response.status_code}[/]" if response.status_code == 200
-                        else f"[bright_red]{response.status_code}[/]",
-                        str(len(response.content)), str(elapsed), interesting
-                    )
-                except Exception as e:
-                    table.add_row(str(i + 1), payload[:25], "ERR", "0", "0", "")
-                await asyncio.sleep(0.05)
+                    async with httpx.AsyncClient(
+                        verify=False, timeout=10, follow_redirects=True
+                    ) as client:
+                        # Try both GET and POST
+                        resp = await client.post(
+                            url,
+                            data={"payload": payload, "username": payload, "password": payload},
+                            headers={"User-Agent": "Vexor/1.1 Intruder"}
+                        )
+                        elapsed = int((time.time() - start) * 1000)
+                        interesting = ""
 
-        log.write_line(f"[+] Done! {len(payloads)} payloads tested.")
+                        # Mark interesting responses
+                        if resp.status_code == 200 and len(resp.content) > 100:
+                            interesting = "⚠️"
+                        if resp.status_code in [302, 301]:
+                            interesting = "🔀 Redirect"
+                        if elapsed > 3000:
+                            interesting = "⏱️ Slow"
+
+                        results.append((i, payload, resp.status_code, len(resp.content), elapsed, interesting))
+
+                        # Add to table immediately
+                        table.add_row(
+                            str(i + 1),
+                            payload[:25],
+                            f"[bright_green]{resp.status_code}[/]" if resp.status_code == 200
+                            else f"[bright_red]{resp.status_code}[/]",
+                            str(len(resp.content)),
+                            str(elapsed),
+                            interesting
+                        )
+                except Exception as e:
+                    table.add_row(str(i + 1), payload[:25], "ERR", "0", "0", str(e)[:15])
+
+        # Launch all attacks concurrently
+        tasks = [attack_single(i, p) for i, p in enumerate(payloads)]
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Summary
+        if results:
+            success = sum(1 for r in results if r[2] == 200)
+            log.write_line(f"[+] Done! {len(results)} requests | {success} x 200 OK")
         self.attacking = False
 
     @work(exclusive=True)

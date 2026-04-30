@@ -108,13 +108,24 @@ async def _run_scan(
         modules_to_run = [module]
     elif full:
         modules_to_run = [
+            # Core web vulns
             "sqli", "xss", "csrf", "idor", "ssrf", "xxe", "lfi",
-            "jwt_analyzer", "ssl_analyzer", "headers", "cors",
-            "websocket", "api_tester", "fingerprinter",
-            "subdomain", "dirbuster", "port_scanner",
+            # Auth & tokens
+            "jwt_analyzer", "auth_bypass",
+            # Network & SSL
+            "ssl_analyzer", "port_scanner",
+            # Headers & config
+            "headers", "cors",
+            # Advanced
+            "websocket", "api_tester", "graphql",
+            "ssti", "http_smuggling",
+            # Recon
+            "fingerprinter", "subdomain", "dirbuster",
+            "cve_lookup", "wayback", "github_dork",
+            # Runtime
             "rate_limit", "open_redirect", "session_analyzer",
-            "sensitive_data", "auth_bypass", "cve_lookup",
-            "wayback", "github_dork",
+            "sensitive_data", "file_upload",
+            # OOB
             "osint", "blind_scanner",
         ]
     else:
