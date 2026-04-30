@@ -151,7 +151,6 @@ class VexorSidebar(Widget):
         text-style: bold;
         padding: 0 2;
         background: #0d0d1a;
-        cursor: pointer;
     }
     .sidebar-section-header:hover {
         background: #1a1a2e;
@@ -179,7 +178,6 @@ class VexorSidebar(Widget):
         height: 2;
         color: #444444;
         padding: 0 2;
-        font-size: 10;
     }
     """
 
