@@ -50,7 +50,6 @@ dependencies = [
     "dnspython>=2.6.0",
 
     # Storage
-    "sqlalchemy>=2.0.0",
     "aiosqlite>=0.20.0",
 
     # Reports

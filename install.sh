@@ -64,7 +64,6 @@ APT_PKGS=(
     python3-requests
     python3-bs4
     python3-dnspython
-    python3-sqlalchemy
     python3-dotenv
     python3-aiofiles
     python3-scapy
@@ -119,6 +118,12 @@ pip_safe "aiosqlite>=0.20.0"
 pip_safe "markdown>=3.6"
 pip_safe "python-nmap>=0.7.1"
 pip_safe "weasyprint>=62.0"
+
+# sqlalchemy — apt version broken on Python 3.13, use pip latest
+echo -e "${CYAN}    Installing sqlalchemy (Python 3.13 compatible)...${NC}"
+$PIP_CMD install "sqlalchemy>=2.0.36" $PIP_FLAGS 2>/dev/null && \
+    echo -e "${GREEN}    ✓ sqlalchemy (pip latest)${NC}" || \
+    echo -e "${YELLOW}    ! sqlalchemy failed${NC}"
 
 # Playwright — optional, may fail on Python 3.13
 echo -e "${CYAN}    Installing playwright (optional)...${NC}"

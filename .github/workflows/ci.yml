@@ -56,7 +56,6 @@ jobs:
         python -c "from vexor.reports.html import HTMLReport; print('✓ reports OK')"
         python -c "from vexor.core.decoder import Decoder; print('✓ decoder OK')"
         python -c "from vexor.plugins.manager import PluginManager; print('✓ plugins OK')"
-
     - name: Test CLI entry point
       run: |
         cd cli
