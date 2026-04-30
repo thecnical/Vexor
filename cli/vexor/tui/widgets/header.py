@@ -1,5 +1,5 @@
 """
-Vexor Header Widget — Centered logo
+Vexor Header Widget — Simple centered, never cuts
 """
 from textual.widget import Widget
 from textual.app import ComposeResult
@@ -8,27 +8,39 @@ from vexor.config import TOOL_VERSION, TOOL_AUTHOR, TOOL_TAGLINE
 
 
 class VexorHeader(Widget):
-    """Centered Vexor Header"""
 
     DEFAULT_CSS = """
     VexorHeader {
-        height: 5;
+        height: 4;
         background: #0d0d1a;
         border-bottom: solid #00ffff;
-        align: center middle;
-        content-align: center middle;
     }
-    #header-content {
+    #header-top {
         width: 100%;
+        height: 2;
         content-align: center middle;
         text-align: center;
+        background: #0d0d1a;
+    }
+    #header-bottom {
+        width: 100%;
+        height: 2;
+        content-align: center middle;
+        text-align: center;
+        background: #0d0d1a;
     }
     """
 
     def compose(self) -> ComposeResult:
         yield Static(
-            f"[bold bright_cyan]██╗   ██╗███████╗██╗  ██╗ ██████╗ ██████╗[/]\n"
-            f"[bold bright_cyan]╚████╔╝ ███████╗██╔╝ ██╗╚██████╔╝██║  ██║[/]\n"
-            f"[bold bright_magenta] v{TOOL_VERSION}  ·  {TOOL_TAGLINE}  ·  {TOOL_AUTHOR}[/]",
-            id="header-content"
+            "[bold bright_cyan]V E X O R[/]",
+            id="header-top"
+        )
+        yield Static(
+            f"[bright_magenta]v{TOOL_VERSION}[/]"
+            f"[dim]  ·  [/]"
+            f"[dim]{TOOL_TAGLINE}[/]"
+            f"[dim]  ·  [/]"
+            f"[dim]{TOOL_AUTHOR}[/]",
+            id="header-bottom"
         )

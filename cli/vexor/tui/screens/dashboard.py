@@ -1,5 +1,5 @@
 """
-Vexor Dashboard Screen — Fixed responsive layout
+Vexor Dashboard Screen
 """
 from textual.app import ComposeResult
 from textual.widget import Widget
@@ -14,7 +14,6 @@ class DashboardScreen(Widget):
     DashboardScreen {
         background: #0a0a0f;
         padding: 0 1;
-        overflow-y: auto;
     }
     .dash-title {
         height: 2;
@@ -22,28 +21,25 @@ class DashboardScreen(Widget):
         text-style: bold;
     }
     .stats-row {
-        height: 6;
+        height: 5;
         margin-bottom: 1;
     }
     .stat-card {
         border: solid #1a1a2e;
-        padding: 1;
+        padding: 0 1;
         margin-right: 1;
+        height: 5;
         content-align: center middle;
     }
-    .stat-value {
-        text-style: bold;
-        color: #00ffff;
-    }
     .activity-table {
-        height: 12;
+        height: 10;
         border: solid #1a1a2e;
         margin-bottom: 1;
     }
     .quickstart {
         border: solid #1a1a2e;
         padding: 1;
-        height: auto;
+        height: 7;
     }
     .section-label {
         color: #ff00ff;
@@ -54,7 +50,8 @@ class DashboardScreen(Widget):
 
     def compose(self) -> ComposeResult:
         yield Static(
-            "[bold bright_cyan]◈ DASHBOARD[/]  [dim]Welcome to Vexor — AI-Powered Security Toolkit[/]",
+            "[bold bright_cyan]◈ DASHBOARD[/]  "
+            "[dim]Welcome to Vexor — AI-Powered Security Toolkit[/]",
             classes="dash-title"
         )
 
@@ -88,20 +85,18 @@ class DashboardScreen(Widget):
 
         yield Static("[bold bright_magenta]◈ QUICK START[/]", classes="section-label")
         with Container(classes="quickstart"):
-            with Horizontal():
-                yield Static(
-                    "[bright_cyan]F2[/] [white]Proxy[/]    "
-                    "[bright_cyan]F3[/] [white]Scanner[/]  "
-                    "[bright_cyan]F4[/] [white]Intruder[/]\n"
-                    "[bright_cyan]F5[/] [white]Repeater[/] "
-                    "[bright_cyan]F6[/] [white]AI Panel[/] "
-                    "[bright_cyan]F7[/] [white]Reports[/]\n"
-                    "[bright_magenta]Ctrl+H[/] [white]Help[/]  "
-                    "[bright_magenta]Ctrl+O[/] [white]Offline[/]  "
-                    "[bright_magenta]Ctrl+Q[/] [white]Quit[/]"
-                )
-
-        yield Static(
-            f"\n[dim]Ready | {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | "
-            f"All modules loaded[/]"
-        )
+            yield Static(
+                "[bright_cyan]F2[/] Proxy  "
+                "[bright_cyan]F3[/] Scanner  "
+                "[bright_cyan]F4[/] Intruder  "
+                "[bright_cyan]F5[/] Repeater  "
+                "[bright_cyan]F6[/] AI Panel  "
+                "[bright_cyan]F7[/] Reports\n"
+                "[bright_magenta]Ctrl+H[/] Help  "
+                "[bright_magenta]Ctrl+O[/] Offline Mode  "
+                "[bright_magenta]Ctrl+Q[/] Quit"
+            )
+            yield Static(
+                f"[dim]Ready · {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')} · "
+                f"26 modules loaded[/]"
+            )

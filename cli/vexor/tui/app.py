@@ -28,7 +28,7 @@ Screen {
 }
 
 VexorHeader {
-    height: 5;
+    height: 4;
     background: #0d0d1a;
     border-bottom: solid #00ffff;
 }
@@ -62,7 +62,7 @@ VexorSidebar {
 #main-content {
     background: #0a0a0f;
     padding: 0 1;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 VexorStatusBar {
