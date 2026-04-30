@@ -42,9 +42,10 @@ vexor.db
 *.db
 *.sqlite
 
-# ─── Reports output ───────────────────────────────────────────
+# ─── Reports output (runtime generated files only) ───────────
 reports/
 *.pdf
+# Note: cli/vexor/reports/ source code IS tracked
 
 # ─── Logs ─────────────────────────────────────────────────────
 *.log
