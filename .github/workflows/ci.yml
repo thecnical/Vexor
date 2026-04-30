@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    name: CLI Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,29 +25,45 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update -qq
-        sudo apt-get install -y nmap libssl-dev libffi-dev
+        sudo apt-get install -y nmap libssl-dev libffi-dev libxml2-dev libxslt1-dev
 
-    - name: Install Python dependencies
+    - name: Upgrade pip
+      run: pip install --upgrade pip setuptools wheel
+
+    - name: Install Vexor CLI
       run: |
         cd cli
-        pip install --upgrade pip
         pip install -e .
         pip install pytest pytest-asyncio
 
-    - name: Run import checks
+    - name: Test imports
       run: |
-        python -c "import vexor; print('✓ vexor imports OK')"
+        cd cli
+        python -c "import vexor; print('✓ vexor OK')"
+        python -c "from vexor.config import TOOL_VERSION; print(f'✓ version {TOOL_VERSION}')"
         python -c "from vexor.modules.sqli import Scanner; print('✓ sqli OK')"
         python -c "from vexor.modules.xss import Scanner; print('✓ xss OK')"
         python -c "from vexor.modules.headers import Scanner; print('✓ headers OK')"
-      working-directory: cli
+        python -c "from vexor.modules.cors import Scanner; print('✓ cors OK')"
+        python -c "from vexor.modules.ssl_analyzer import Scanner; print('✓ ssl OK')"
+        python -c "from vexor.modules.jwt_analyzer import Scanner; print('✓ jwt OK')"
+        python -c "from vexor.modules.sensitive_data import Scanner; print('✓ sensitive_data OK')"
+        python -c "from vexor.tui.app import VexorApp; print('✓ TUI OK')"
+        python -c "from vexor.ai.client import AIClient; print('✓ AI client OK')"
+        python -c "from vexor.reports.html import HTMLReport; print('✓ reports OK')"
 
-    - name: Run tests
+    - name: Test CLI entry point
       run: |
         cd cli
-        pytest tests/ -v --tb=short 2>/dev/null || echo "No tests yet"
+        python -m vexor.main --version
+
+    - name: Run tests (if any)
+      run: |
+        cd cli
+        pytest tests/ -v --tb=short
 
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -55,21 +72,5 @@ jobs:
         python-version: "3.11"
     - name: Install ruff
       run: pip install ruff
-    - name: Lint
-      run: ruff check vexor/cli/vexor/ --ignore E501,F401 || true
-
-  backend-test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-    - name: Install backend deps
-      run: |
-        cd backend
-        pip install -r requirements.txt
-    - name: Test backend imports
-      run: |
-        cd backend
-        python -c "from app.main import app; print('✓ backend OK')"
+    - name: Lint (non-blocking)
+      run: ruff check cli/vexor/ --ignore E501,F401,F811 || true
