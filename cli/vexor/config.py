@@ -13,7 +13,7 @@ LOGS_DIR = HOME_DIR / "logs"
 PLUGINS_DIR = HOME_DIR / "plugins"
 
 # Backend
-BACKEND_URL = os.getenv("VEXOR_BACKEND_URL", "https://vexor-backend.onrender.com")
+BACKEND_URL = os.getenv("VEXOR_BACKEND_URL", "https://vexor-backend-fnow.onrender.com")
 API_VERSION = "v1"
 API_BASE = f"{BACKEND_URL}/api/{API_VERSION}"
 
