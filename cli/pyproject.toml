@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vexor"
-version = "1.0.0"
+version = "2.0.0"
 description = "AI-Powered CLI Security Toolkit"
 authors = [
     {name = "Chandan Pandey (Technical)", email = "chandan@vexor.security"}

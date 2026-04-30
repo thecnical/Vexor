@@ -1,11 +1,13 @@
 """
-Vexor Sidebar Widget — Collapsible sections
+Vexor Sidebar Widget v2.0.0 — Collapsible sections
+Click section header to collapse/expand · Item count in collapsed state
 """
 from textual.widget import Widget
 from textual.app import ComposeResult
 from textual.widgets import Static
 from textual.containers import Vertical
 from textual.reactive import reactive
+from textual.message import Message
 
 
 MENU_ITEMS = [
@@ -22,6 +24,11 @@ TOOL_ITEMS = [
     ("decoder",  "F8",  "Decoder"),
     ("comparer", "F9",  "Comparer"),
     ("osint",    "F10", "SpiderFoot"),
+]
+
+SETTINGS_ITEMS = [
+    ("config",   "",    "Config"),
+    ("plugins",  "",    "Plugins"),
 ]
 
 
@@ -48,20 +55,76 @@ class SidebarItem(Static):
 
 
 class SectionHeader(Static):
-    """Collapsible section header"""
-    def __init__(self, title: str, section_id: str, collapsed: bool = False):
+    """Collapsible section header — click to toggle"""
+
+    class Toggled(Message):
+        def __init__(self, section_id: str, collapsed: bool) -> None:
+            super().__init__()
+            self.section_id = section_id
+            self.collapsed = collapsed
+
+    def __init__(
+        self,
+        title: str,
+        section_id: str,
+        item_count: int = 0,
+        collapsed: bool = False,
+    ):
         self._title = title
         self._section_id = section_id
+        self._item_count = item_count
         self._collapsed = collapsed
         super().__init__(self._render(), classes="sidebar-section-header")
 
     def _render(self) -> str:
-        arrow = "▼" if not self._collapsed else "▶"
-        return f"[bold bright_magenta]{arrow} {self._title}[/]"
+        if self._collapsed:
+            return (
+                f"[bold bright_magenta]▶ {self._title}[/] "
+                f"[dim]({self._item_count})[/]"
+            )
+        return f"[bold bright_magenta]▼ {self._title}[/]"
 
-    def toggle(self) -> bool:
+    def on_click(self) -> None:
         self._collapsed = not self._collapsed
         self.update(self._render())
+        self.post_message(self.Toggled(self._section_id, self._collapsed))
+
+    @property
+    def collapsed(self) -> bool:
+        return self._collapsed
+
+    def set_collapsed(self, value: bool) -> None:
+        self._collapsed = value
+        self.update(self._render())
+
+
+class CollapsibleSection(Vertical):
+    """A section that can be collapsed/expanded"""
+
+    DEFAULT_CSS = """
+    CollapsibleSection {
+        height: auto;
+    }
+    """
+
+    def __init__(self, section_id: str, *args, **kwargs):
+        self._section_id = section_id
+        self._collapsed = False
+        super().__init__(*args, **kwargs, id=f"section-{section_id}")
+
+    def collapse(self) -> None:
+        self._collapsed = True
+        self.display = False
+
+    def expand(self) -> None:
+        self._collapsed = False
+        self.display = True
+
+    def toggle(self) -> bool:
+        if self._collapsed:
+            self.expand()
+        else:
+            self.collapse()
         return self._collapsed
 
 
@@ -88,6 +151,7 @@ class VexorSidebar(Widget):
         text-style: bold;
         padding: 0 2;
         background: #0d0d1a;
+        cursor: pointer;
     }
     .sidebar-section-header:hover {
         background: #1a1a2e;
@@ -123,32 +187,62 @@ class VexorSidebar(Widget):
         yield Static("[bold bright_magenta]◈ VEXOR MENU[/]", classes="sidebar-brand")
         yield Static("[dim]──────────────────────[/]", classes="sidebar-divider")
 
-        # Main menu
-        for name, key, label in MENU_ITEMS:
-            active = name == "dashboard"
-            yield SidebarItem(name, key, label, active)
+        # ── VEXOR MENU section (always visible, collapsible) ──
+        yield SectionHeader(
+            "VEXOR MENU",
+            "menu",
+            item_count=len(MENU_ITEMS),
+            collapsed=False,
+        )
+        with CollapsibleSection("menu"):
+            for name, key, label in MENU_ITEMS:
+                active = name == "dashboard"
+                yield SidebarItem(name, key, label, active)
 
         yield Static("[dim]──────────────────────[/]", classes="sidebar-divider")
 
-        # Tools section
-        yield Static("[bold bright_magenta]▼ TOOLS[/]", classes="sidebar-section-header", id="tools-header")
-        for name, key, label in TOOL_ITEMS:
-            color = "bright_magenta" if name == "osint" else "white"
-            item = SidebarItem(name, key, label)
-            yield item
+        # ── TOOLS section ──
+        yield SectionHeader(
+            "TOOLS",
+            "tools",
+            item_count=len(TOOL_ITEMS),
+            collapsed=False,
+        )
+        with CollapsibleSection("tools"):
+            for name, key, label in TOOL_ITEMS:
+                yield SidebarItem(name, key, label)
 
         yield Static("[dim]──────────────────────[/]", classes="sidebar-divider")
 
-        # Settings
-        yield Static("[bold bright_magenta]▼ SETTINGS[/]", classes="sidebar-section-header")
-        yield Static("[dim]  ○[/] [white]Config[/]", classes="sidebar-item")
-        yield Static("[dim]  ○[/] [white]Plugins[/]", classes="sidebar-item")
+        # ── SETTINGS section ──
+        yield SectionHeader(
+            "SETTINGS",
+            "settings",
+            item_count=len(SETTINGS_ITEMS),
+            collapsed=False,
+        )
+        with CollapsibleSection("settings"):
+            for name, key, label in SETTINGS_ITEMS:
+                yield SidebarItem(name, key, label)
 
         yield Static("[dim]──────────────────────[/]", classes="sidebar-divider")
         yield Static(
             "[dim]Ctrl+H Help  Ctrl+Q Quit[/]",
             classes="sidebar-footer"
         )
+
+    def on_section_header_toggled(self, event: SectionHeader.Toggled) -> None:
+        """Handle section collapse/expand"""
+        try:
+            section = self.query_one(
+                f"#section-{event.section_id}", CollapsibleSection
+            )
+            if event.collapsed:
+                section.collapse()
+            else:
+                section.expand()
+        except Exception:
+            pass
 
     def set_active(self, name: str) -> None:
         for item in self.query(SidebarItem):

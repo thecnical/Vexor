@@ -1,13 +1,14 @@
 """
-Vexor Intruder Screen — Fixed responsive layout
+Vexor Intruder Screen v2.0.0 — Very Fast, 50 parallel requests
 """
 from textual.app import ComposeResult
 from textual.widget import Widget
-from textual.widgets import Static, Input, Button, DataTable, Log, TextArea, Select
+from textual.widgets import Static, Input, Button, DataTable, Log, TextArea, Select, ProgressBar
 from textual.containers import Horizontal, Vertical, Container
 from textual import work
 from textual.reactive import reactive
 import asyncio
+import time
 
 
 ATTACK_TYPES = [
@@ -58,8 +59,14 @@ class IntruderScreen(Widget):
         width: 20;
         padding-left: 1;
     }
+    .progress-section {
+        height: 4;
+        border: solid #1a1a2e;
+        padding: 0 1;
+        margin-bottom: 1;
+    }
     .results-table {
-        height: 12;
+        height: 14;
         border: solid #1a1a2e;
         margin-bottom: 1;
     }
@@ -73,7 +80,8 @@ class IntruderScreen(Widget):
 
     def compose(self) -> ComposeResult:
         yield Static(
-            "[bold bright_cyan]◈ INTRUDER[/]  [dim]Automated Customized Attacks[/]",
+            "[bold bright_cyan]◈ INTRUDER[/]  "
+            "[dim]50 Parallel Requests · Smart Interesting Detection[/]",
             classes="intruder-title"
         )
 
@@ -109,9 +117,21 @@ class IntruderScreen(Widget):
                     yield Button("📚 Built-in", id="btn-builtin")
                     yield Button("🤖 AI Gen", id="btn-ai-generate")
 
-        yield Static("[bold bright_magenta]◈ RESULTS[/]")
+        # Progress section
+        with Container(classes="progress-section"):
+            yield Static(
+                "[dim]Ready — 0/0 requests[/]",
+                id="progress-label"
+            )
+            yield ProgressBar(total=100, show_eta=False, id="attack-progress")
+            yield Static(
+                "[dim]0 req/s  ·  0 interesting  ·  0 errors[/]",
+                id="stats-label"
+            )
+
+        yield Static("[bold bright_magenta]◈ RESULTS[/]  [dim](sorted: interesting first)[/]")
         table = DataTable(classes="results-table", id="intruder-results")
-        table.add_columns("#", "Payload", "Status", "Length", "Time(ms)", "Interesting")
+        table.add_columns("#", "Payload", "Status", "Length", "Time(ms)", "⚑ Interesting")
         yield table
 
         yield Static("[bold bright_magenta]◈ LOG[/]")
@@ -124,83 +144,187 @@ class IntruderScreen(Widget):
             self.attacking = False
         elif event.button.id in ("btn-ai-payloads", "btn-ai-generate"):
             self.generate_ai_payloads()
+        elif event.button.id == "btn-builtin":
+            self._load_builtin_payloads("general")
 
     @work(exclusive=True)
     async def start_attack(self) -> None:
         url = self.query_one("#intruder-url", Input).value
         payloads_text = self.query_one("#payload-list", TextArea).text
-        payloads = [p.strip() for p in payloads_text.split('\n') if p.strip()]
+        payloads = [p.strip() for p in payloads_text.split("\n") if p.strip()]
         log = self.query_one("#attack-log", Log)
         table = self.query_one("#intruder-results", DataTable)
+        progress_bar = self.query_one("#attack-progress", ProgressBar)
+        progress_label = self.query_one("#progress-label", Static)
+        stats_label = self.query_one("#stats-label", Static)
 
         if not url or not payloads:
             self.notify("Enter URL and payloads", severity="error")
             return
 
-        # Normalize URL
         if not url.startswith("http"):
             url = f"https://{url}"
 
         self.attacking = True
-        log.write_line(f"[*] Starting attack on {url}")
-        log.write_line(f"[*] {len(payloads)} payloads | 20 concurrent workers")
+        table.clear()
+        progress_bar.update(total=len(payloads), progress=0)
+
+        log.write_line(f"[*] Target: {url}")
+        log.write_line(f"[*] {len(payloads)} payloads | 50 concurrent workers")
 
         import httpx
-        import time
 
-        # Use semaphore for concurrent requests (20 workers = very fast)
-        semaphore = asyncio.Semaphore(20)
+        semaphore = asyncio.Semaphore(50)
         results = []
+        completed = 0
+        interesting_count = 0
+        error_count = 0
+        start_time = time.time()
+
+        # Collect all status codes first to detect anomalies
+        status_counter: dict[int, int] = {}
 
         async def attack_single(i: int, payload: str):
+            nonlocal completed, interesting_count, error_count
+
             async with semaphore:
                 if not self.attacking:
                     return
-                start = time.time()
+
+                t0 = time.time()
                 try:
                     async with httpx.AsyncClient(
                         verify=False, timeout=10, follow_redirects=True
                     ) as client:
-                        # Try both GET and POST
                         resp = await client.post(
                             url,
-                            data={"payload": payload, "username": payload, "password": payload},
-                            headers={"User-Agent": "Vexor/1.1 Intruder"}
+                            data={
+                                "payload": payload,
+                                "username": payload,
+                                "password": payload,
+                            },
+                            headers={"User-Agent": "Vexor/2.0 Intruder"},
                         )
-                        elapsed = int((time.time() - start) * 1000)
-                        interesting = ""
+                        elapsed_ms = int((time.time() - t0) * 1000)
+                        length = len(resp.content)
+                        status = resp.status_code
 
-                        # Mark interesting responses
-                        if resp.status_code == 200 and len(resp.content) > 100:
-                            interesting = "⚠️"
-                        if resp.status_code in [302, 301]:
-                            interesting = "🔀 Redirect"
-                        if elapsed > 3000:
-                            interesting = "⏱️ Slow"
+                        # Track status distribution
+                        status_counter[status] = status_counter.get(status, 0) + 1
 
-                        results.append((i, payload, resp.status_code, len(resp.content), elapsed, interesting))
+                        results.append((i, payload, status, length, elapsed_ms))
 
-                        # Add to table immediately
-                        table.add_row(
-                            str(i + 1),
-                            payload[:25],
-                            f"[bright_green]{resp.status_code}[/]" if resp.status_code == 200
-                            else f"[bright_red]{resp.status_code}[/]",
-                            str(len(resp.content)),
-                            str(elapsed),
-                            interesting
-                        )
                 except Exception as e:
-                    table.add_row(str(i + 1), payload[:25], "ERR", "0", "0", str(e)[:15])
+                    elapsed_ms = int((time.time() - t0) * 1000)
+                    error_count += 1
+                    results.append((i, payload, 0, 0, elapsed_ms))
+
+                completed += 1
+
+                # Update progress
+                elapsed_total = time.time() - start_time
+                rps = completed / elapsed_total if elapsed_total > 0 else 0
+                pct = int((completed / len(payloads)) * 100)
+                progress_bar.update(progress=completed)
+                progress_label.update(
+                    f"[bright_cyan]{completed}/{len(payloads)} requests[/]  "
+                    f"[dim]{pct}% complete[/]"
+                )
+                stats_label.update(
+                    f"[bright_green]{rps:.1f} req/s[/]  ·  "
+                    f"[bright_yellow]{interesting_count} interesting[/]  ·  "
+                    f"[bright_red]{error_count} errors[/]"
+                )
 
         # Launch all attacks concurrently
         tasks = [attack_single(i, p) for i, p in enumerate(payloads)]
         await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Summary
-        if results:
-            success = sum(1 for r in results if r[2] == 200)
-            log.write_line(f"[+] Done! {len(results)} requests | {success} x 200 OK")
+        # Determine "interesting" based on anomalies
+        # Find the most common status code
+        if status_counter:
+            dominant_status = max(status_counter, key=lambda k: status_counter[k])
+            dominant_length_list = [
+                r[3] for r in results if r[2] == dominant_status and r[3] > 0
+            ]
+            avg_length = (
+                sum(dominant_length_list) / len(dominant_length_list)
+                if dominant_length_list else 0
+            )
+        else:
+            dominant_status = 200
+            avg_length = 0
+
+        # Classify results
+        classified = []
+        for i, payload, status, length, elapsed_ms in results:
+            interesting = ""
+            interesting_score = 0
+
+            # Different status from majority
+            if status != dominant_status and status != 0:
+                if status == 200:
+                    interesting = "🔓 Auth bypass?"
+                    interesting_score = 10
+                elif status in (301, 302):
+                    interesting = "🔀 Redirect"
+                    interesting_score = 5
+                elif status == 500:
+                    interesting = "💥 Server error"
+                    interesting_score = 8
+                else:
+                    interesting = f"⚠ Status {status}"
+                    interesting_score = 3
+
+            # Significantly different length
+            if avg_length > 0 and length > 0:
+                diff_pct = abs(length - avg_length) / avg_length
+                if diff_pct > 0.2 and not interesting:
+                    interesting = f"📏 Len diff {int(diff_pct*100)}%"
+                    interesting_score = max(interesting_score, 4)
+
+            # Slow response (possible time-based SQLi)
+            if elapsed_ms > 3000:
+                interesting = "⏱ Slow response"
+                interesting_score = max(interesting_score, 7)
+
+            if interesting:
+                interesting_count += 1
+
+            classified.append((i, payload, status, length, elapsed_ms, interesting, interesting_score))
+
+        # Sort: interesting first, then by index
+        classified.sort(key=lambda x: (-x[6], x[0]))
+
+        # Populate table
+        table.clear()
+        for i, payload, status, length, elapsed_ms, interesting, _ in classified:
+            if status == 0:
+                status_str = "[bright_red]ERR[/]"
+            elif status == 200:
+                status_str = f"[bright_green]{status}[/]"
+            elif status in (301, 302):
+                status_str = f"[bright_yellow]{status}[/]"
+            elif status >= 400:
+                status_str = f"[bright_red]{status}[/]"
+            else:
+                status_str = str(status)
+
+            table.add_row(
+                str(i + 1),
+                payload[:30],
+                status_str,
+                str(length),
+                str(elapsed_ms),
+                interesting,
+            )
+
+        elapsed_total = time.time() - start_time
+        rps = len(payloads) / elapsed_total if elapsed_total > 0 else 0
+        log.write_line(
+            f"[+] Done! {len(results)} requests in {elapsed_total:.1f}s "
+            f"({rps:.1f} req/s) | {interesting_count} interesting"
+        )
         self.attacking = False
 
     @work(exclusive=True)
@@ -213,13 +337,10 @@ class IntruderScreen(Widget):
             from vexor.ai.client import AIClient
             client = AIClient()
 
-            # Build context-aware prompt
             context = f"URL: {url}\nRequest template: {template[:200]}"
-
-            # Detect what type of payloads are needed from template
             payload_type = "general"
             template_lower = template.lower()
-            if "username" in template_lower or "password" in template_lower or "login" in template_lower:
+            if "username" in template_lower or "password" in template_lower:
                 payload_type = "auth_bypass"
             elif "search" in template_lower or "q=" in template_lower:
                 payload_type = "xss"
@@ -227,25 +348,25 @@ class IntruderScreen(Widget):
                 payload_type = "sqli"
 
             payloads = await client.generate_payloads(
-                target=context,
-                payload_type=payload_type,
-                count=25
+                target=context, payload_type=payload_type, count=25
             )
 
             if payloads:
-                # Deduplicate
                 unique_payloads = list(dict.fromkeys(payloads))
-                self.query_one("#payload-list", TextArea).load_text('\n'.join(unique_payloads))
-                self.notify(f"Generated {len(unique_payloads)} unique payloads!", severity="information")
+                self.query_one("#payload-list", TextArea).load_text(
+                    "\n".join(unique_payloads)
+                )
+                self.notify(
+                    f"Generated {len(unique_payloads)} unique payloads!",
+                    severity="information",
+                )
             else:
-                # Fallback to built-in payloads
                 self._load_builtin_payloads(payload_type)
         except Exception as e:
             self.notify(f"AI error: {str(e)[:50]}", severity="error")
             self._load_builtin_payloads("general")
 
     def _load_builtin_payloads(self, payload_type: str) -> None:
-        """Load built-in payloads as fallback"""
         builtin = {
             "auth_bypass": [
                 "admin", "administrator", "root", "test", "guest",
@@ -272,5 +393,5 @@ class IntruderScreen(Widget):
             ],
         }
         payloads = builtin.get(payload_type, builtin["general"])
-        self.query_one("#payload-list", TextArea).load_text('\n'.join(payloads))
+        self.query_one("#payload-list", TextArea).load_text("\n".join(payloads))
         self.notify(f"Loaded {len(payloads)} built-in payloads", severity="information")

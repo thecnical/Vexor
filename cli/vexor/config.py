@@ -22,7 +22,7 @@ TOKEN_FILE = HOME_DIR / "token.json"
 
 # Tool info
 TOOL_NAME = "Vexor"
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "2.0.0"
 TOOL_AUTHOR = "Chandan Pandey (Technical)"
 TOOL_DESCRIPTION = "AI-Powered CLI Security Toolkit"
 TOOL_TAGLINE = "Penetrate. Analyze. Dominate."

