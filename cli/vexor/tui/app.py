@@ -17,6 +17,8 @@ from vexor.tui.screens.intruder_screen import IntruderScreen
 from vexor.tui.screens.repeater_screen import RepeaterScreen
 from vexor.tui.screens.ai_screen import AIScreen
 from vexor.tui.screens.reports_screen import ReportsScreen
+from vexor.tui.screens.decoder_screen import DecoderScreen
+from vexor.tui.screens.comparer_screen import ComparerScreen
 from vexor.tui.widgets.header import VexorHeader
 from vexor.tui.widgets.sidebar import VexorSidebar
 from vexor.tui.widgets.status_bar import VexorStatusBar
@@ -196,6 +198,8 @@ class VexorApp(App):
         Binding("f5", "show_repeater", "Repeater"),
         Binding("f6", "show_ai", "AI Panel"),
         Binding("f7", "show_reports", "Reports"),
+        Binding("f8", "show_decoder", "Decoder"),
+        Binding("f9", "show_comparer", "Comparer"),
         Binding("ctrl+h", "show_help", "Help"),
         Binding("ctrl+o", "toggle_offline", "Offline"),
     ]
@@ -247,6 +251,12 @@ class VexorApp(App):
 
     def action_show_reports(self) -> None:
         self._switch_screen("reports", ReportsScreen)
+
+    def action_show_decoder(self) -> None:
+        self._switch_screen("decoder", DecoderScreen)
+
+    def action_show_comparer(self) -> None:
+        self._switch_screen("comparer", ComparerScreen)
 
     def action_show_help(self) -> None:
         self.push_screen(HelpScreen())
@@ -301,6 +311,8 @@ class HelpScreen(Screen):
 | F5 | Repeater |
 | F6 | AI Panel |
 | F7 | Reports |
+| F8 | Decoder |
+| F9 | Comparer |
 | Ctrl+H | Help |
 | Ctrl+O | Offline Mode |
 | Ctrl+Q | Quit |

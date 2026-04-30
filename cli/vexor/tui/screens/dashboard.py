@@ -92,8 +92,10 @@ class DashboardScreen(Widget):
                 "[bright_cyan]F5[/] Repeater  "
                 "[bright_cyan]F6[/] AI Panel  "
                 "[bright_cyan]F7[/] Reports\n"
+                "[bright_cyan]F8[/] Decoder  "
+                "[bright_cyan]F9[/] Comparer  "
                 "[bright_magenta]Ctrl+H[/] Help  "
-                "[bright_magenta]Ctrl+O[/] Offline Mode  "
+                "[bright_magenta]Ctrl+O[/] Offline  "
                 "[bright_magenta]Ctrl+Q[/] Quit"
             )
             yield Static(
