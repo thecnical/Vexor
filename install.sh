@@ -107,7 +107,14 @@ pip_safe() {
         echo -e "${YELLOW}    ! $pkg (optional — skipped)${NC}"
 }
 
-pip_safe "typer>=0.12.0"
+# click + typer — must be compatible versions
+# click 8.1.x works with typer 0.12.x
+echo -e "${CYAN}    Installing click + typer (compatible versions)...${NC}"
+$PIP_CMD install "click==8.1.7" $PIP_FLAGS 2>/dev/null
+$PIP_CMD install "typer==0.9.4" $PIP_FLAGS 2>/dev/null && \
+    echo -e "${GREEN}    ✓ typer + click (compatible)${NC}" || \
+    pip_safe "typer>=0.9.0"
+
 pip_safe "rich>=13.0.0"
 pip_safe "textual>=0.60.0"
 pip_safe "httpx>=0.27.0"
