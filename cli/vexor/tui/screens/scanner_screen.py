@@ -147,6 +147,11 @@ class ScannerScreen(Widget):
         table = self.query_one("#results-table", DataTable)
         progress = self.query_one("#scan-progress", ProgressBar)
 
+        # Save target to global state
+        from vexor.core.state import state, ScanResult
+        state.scan_target = target
+        state.scans_run += 1
+
         log.write_line(f"[*] Starting {scan_type} scan: {target}")
         self.scanning = True
 
@@ -171,6 +176,15 @@ class ScannerScreen(Widget):
                         mod_name, finding.vuln,
                         finding.endpoint[:35], finding.param or "-"
                     )
+                    # Save to global state so dashboard shows it
+                    state.add_scan_result(ScanResult(
+                        severity=finding.severity,
+                        module=mod_name,
+                        vuln=finding.vuln,
+                        endpoint=finding.endpoint,
+                        param=finding.param or "",
+                        evidence=finding.evidence or "",
+                    ))
             except Exception:
                 pass
 

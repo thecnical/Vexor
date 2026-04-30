@@ -1,5 +1,6 @@
 """
 Vexor TUI - Main Application
+Persistent screens — state survives navigation
 """
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -64,8 +65,20 @@ VexorSidebar {
 
 #main-content {
     background: #0a0a0f;
+    padding: 0;
+}
+
+/* Hide all screens by default */
+.screen-panel {
+    display: none;
     padding: 0 1;
     overflow-y: scroll;
+    height: 100%;
+}
+
+/* Show active screen */
+.screen-panel.active {
+    display: block;
 }
 
 VexorStatusBar {
@@ -145,10 +158,6 @@ ProgressBar {
     color: #00ffff;
 }
 
-ScrollableContainer {
-    background: #0a0a0f;
-}
-
 Select {
     background: #1a1a2e;
     color: #ffffff;
@@ -165,26 +174,28 @@ Select {
     color: #ff00ff;
     text-style: bold;
     height: 2;
-    padding: 0;
 }
-
-.panel-cyan {
-    border: solid #00ffff;
-    padding: 1;
-}
-.panel-magenta {
-    border: solid #ff00ff;
-    padding: 1;
-}
-.panel-dim {
-    border: solid #1a1a2e;
-    padding: 1;
-}
+.panel-cyan { border: solid #00ffff; padding: 1; }
+.panel-magenta { border: solid #ff00ff; padding: 1; }
+.panel-dim { border: solid #1a1a2e; padding: 1; }
 """
+
+SCREEN_MAP = {
+    "dashboard": ("dashboard-panel", DashboardScreen),
+    "proxy": ("proxy-panel", ProxyScreen),
+    "scanner": ("scanner-panel", ScannerScreen),
+    "intruder": ("intruder-panel", IntruderScreen),
+    "repeater": ("repeater-panel", RepeaterScreen),
+    "ai": ("ai-panel", AIScreen),
+    "reports": ("reports-panel", ReportsScreen),
+    "decoder": ("decoder-panel", DecoderScreen),
+    "comparer": ("comparer-panel", ComparerScreen),
+    "osint": ("osint-panel", OSINTScreen),
+}
 
 
 class VexorApp(App):
-    """Main Vexor TUI Application"""
+    """Main Vexor TUI — Persistent screens, state preserved"""
 
     CSS = VEXOR_CSS
     TITLE = f"VEXOR v{TOOL_VERSION}"
@@ -192,23 +203,23 @@ class VexorApp(App):
 
     BINDINGS = [
         Binding("ctrl+q", "quit", "Quit", priority=True),
-        Binding("f1", "show_dashboard", "Dashboard"),
-        Binding("f2", "show_proxy", "Proxy"),
-        Binding("f3", "show_scanner", "Scanner"),
-        Binding("f4", "show_intruder", "Intruder"),
-        Binding("f5", "show_repeater", "Repeater"),
-        Binding("f6", "show_ai", "AI Panel"),
-        Binding("f7", "show_reports", "Reports"),
-        Binding("f8", "show_decoder", "Decoder"),
-        Binding("f9", "show_comparer", "Comparer"),
-        Binding("f10", "show_osint", "OSINT"),
+        Binding("f1", "show_screen('dashboard')", "Dashboard"),
+        Binding("f2", "show_screen('proxy')", "Proxy"),
+        Binding("f3", "show_screen('scanner')", "Scanner"),
+        Binding("f4", "show_screen('intruder')", "Intruder"),
+        Binding("f5", "show_screen('repeater')", "Repeater"),
+        Binding("f6", "show_screen('ai')", "AI Panel"),
+        Binding("f7", "show_screen('reports')", "Reports"),
+        Binding("f8", "show_screen('decoder')", "Decoder"),
+        Binding("f9", "show_screen('comparer')", "Comparer"),
+        Binding("f10", "show_screen('osint')", "OSINT"),
         Binding("ctrl+h", "show_help", "Help"),
         Binding("ctrl+o", "toggle_offline", "Offline"),
     ]
 
     def __init__(self):
         super().__init__()
-        self.current_screen_name = "dashboard"
+        self.current_screen = "dashboard"
         self.is_offline = False
         self.is_connected = False
 
@@ -217,7 +228,15 @@ class VexorApp(App):
         with Horizontal():
             yield VexorSidebar()
             with Container(id="main-content"):
-                yield DashboardScreen()
+                # All screens mounted at once — hidden/shown via CSS
+                for name, (panel_id, screen_class) in SCREEN_MAP.items():
+                    active = "active" if name == "dashboard" else ""
+                    widget = screen_class()
+                    widget.add_class("screen-panel")
+                    if active:
+                        widget.add_class("active")
+                    widget.id = panel_id
+                    yield widget
         yield VexorStatusBar()
 
     def on_mount(self) -> None:
@@ -233,35 +252,41 @@ class VexorApp(App):
         except Exception:
             pass
 
-    def action_show_dashboard(self) -> None:
-        self._switch_screen("dashboard", DashboardScreen)
+    def action_show_screen(self, name: str) -> None:
+        """Switch to a screen without destroying it"""
+        if name not in SCREEN_MAP:
+            return
 
-    def action_show_proxy(self) -> None:
-        self._switch_screen("proxy", ProxyScreen)
+        # Hide all screens
+        for n, (panel_id, _) in SCREEN_MAP.items():
+            try:
+                panel = self.query_one(f"#{panel_id}")
+                panel.remove_class("active")
+            except Exception:
+                pass
 
-    def action_show_scanner(self) -> None:
-        self._switch_screen("scanner", ScannerScreen)
+        # Show target screen
+        panel_id = SCREEN_MAP[name][0]
+        try:
+            panel = self.query_one(f"#{panel_id}")
+            panel.add_class("active")
+        except Exception:
+            pass
 
-    def action_show_intruder(self) -> None:
-        self._switch_screen("intruder", IntruderScreen)
+        self.current_screen = name
 
-    def action_show_repeater(self) -> None:
-        self._switch_screen("repeater", RepeaterScreen)
+        # Update sidebar
+        try:
+            self.query_one(VexorSidebar).set_active(name)
+        except Exception:
+            pass
 
-    def action_show_ai(self) -> None:
-        self._switch_screen("ai", AIScreen)
-
-    def action_show_reports(self) -> None:
-        self._switch_screen("reports", ReportsScreen)
-
-    def action_show_decoder(self) -> None:
-        self._switch_screen("decoder", DecoderScreen)
-
-    def action_show_comparer(self) -> None:
-        self._switch_screen("comparer", ComparerScreen)
-
-    def action_show_osint(self) -> None:
-        self._switch_screen("osint", OSINTScreen)
+        # Update status bar target
+        try:
+            from vexor.core.state import state
+            self.query_one(VexorStatusBar).update_target(state.scan_target)
+        except Exception:
+            pass
 
     def action_show_help(self) -> None:
         self.push_screen(HelpScreen())
@@ -275,15 +300,9 @@ class VexorApp(App):
             pass
         self.notify(f"Mode: {mode}", severity="warning" if self.is_offline else "information")
 
-    def _switch_screen(self, name: str, screen_class) -> None:
-        try:
-            main = self.query_one("#main-content")
-            main.remove_children()
-            main.mount(screen_class())
-            self.current_screen_name = name
-            self.query_one(VexorSidebar).set_active(name)
-        except Exception as e:
-            self.notify(f"Error: {str(e)}", severity="error")
+        # Update state
+        from vexor.core.state import state
+        state.is_offline = self.is_offline
 
 
 class HelpScreen(Screen):
@@ -304,13 +323,13 @@ class HelpScreen(Screen):
     """
 
     HELP_TEXT = """
-# VEXOR Help
+# VEXOR — Help
 
-## Keys
-| Key | Action |
+## Navigation Keys
+| Key | Screen |
 |-----|--------|
 | F1 | Dashboard |
-| F2 | Proxy |
+| F2 | Proxy Interceptor |
 | F3 | Scanner |
 | F4 | Intruder |
 | F5 | Repeater |
@@ -318,18 +337,24 @@ class HelpScreen(Screen):
 | F7 | Reports |
 | F8 | Decoder |
 | F9 | Comparer |
-| Ctrl+H | Help |
-| Ctrl+O | Offline Mode |
+| F10 | OSINT / SpiderFoot |
+| Ctrl+H | This Help |
+| Ctrl+O | Toggle Offline Mode |
 | Ctrl+Q | Quit |
 
-## Commands
+## Note
+**Results are preserved** when switching screens.
+Scanner results stay when you go to Intruder and come back.
+
+## CLI Commands
 ```
-vexor                    # TUI
+vexor                    # Launch TUI
 vexor scan <url>         # Quick scan
-vexor scan <url> --full  # Full scan
-vexor proxy              # Proxy
+vexor scan <url> --full  # Full scan (28 modules)
+vexor proxy              # Start proxy
 vexor auth login         # Login
-vexor update             # Update
+vexor update             # Update Vexor
+vexor --offline          # Offline mode
 ```
 
 *Created by Chandan Pandey (Technical)*
