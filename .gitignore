@@ -1,0 +1,74 @@
+# ─── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.eggs/
+*.egg-link
+MANIFEST
+
+# ─── Virtual Environments ─────────────────────────────────────
+.venv
+env/
+venv/
+ENV/
+.python-version
+
+# ─── Secrets ──────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+
+# ─── BACKEND — Never push to CLI repo ─────────────────────────
+backend/
+
+# ─── Vexor Runtime ────────────────────────────────────────────
+vexor.db
+*.db
+*.sqlite
+
+# ─── Reports output ───────────────────────────────────────────
+reports/
+*.pdf
+
+# ─── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── IDE ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Testing ──────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ─── Playwright ───────────────────────────────────────────────
+playwright-report/
+test-results/
+
+# ─── Misc ─────────────────────────────────────────────────────
+*.bak
+*.tmp
+.cache/

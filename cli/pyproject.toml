@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vexor"
+version = "1.0.0"
+description = "AI-Powered CLI Security Toolkit"
+authors = [
+    {name = "Chandan Pandey (Technical)", email = "chandan@vexor.security"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+keywords = ["security", "pentesting", "hacking", "cli", "ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    # CLI & UI
+    "typer==0.12.3",
+    "rich==13.7.1",
+    "textual==0.60.0",
+
+    # HTTP & Networking
+    "httpx==0.27.0",
+    "requests==2.32.3",
+    "websockets==12.0",
+
+    # HTML/XML Parsing
+    "beautifulsoup4==4.12.3",
+    "lxml==5.2.2",
+
+    # Security & Crypto
+    "pyjwt==2.8.0",
+    "cryptography==42.0.8",
+    "pyOpenSSL==24.1.0",
+
+    # Data & Config
+    "jinja2==3.1.4",
+    "pydantic==2.7.1",
+    "python-dotenv==1.0.1",
+
+    # DNS & Network
+    "dnspython==2.6.1",
+    "scapy==2.5.0",
+
+    # Proxy
+    "mitmproxy==10.3.1",
+
+    # Reports
+    "weasyprint==62.3",
+    "markdown==3.6",
+
+    # Storage
+    "sqlalchemy==2.0.30",
+    "aiosqlite==0.20.0",
+]
+
+[project.optional-dependencies]
+all = [
+    "playwright==1.44.0",
+    "python-nmap==0.7.1",
+]
+
+[project.scripts]
+vexor = "vexor.main:run"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vexor*"]

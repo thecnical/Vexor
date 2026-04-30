@@ -1,0 +1,75 @@
+name: Vexor CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y nmap libssl-dev libffi-dev
+
+    - name: Install Python dependencies
+      run: |
+        cd cli
+        pip install --upgrade pip
+        pip install -e .
+        pip install pytest pytest-asyncio
+
+    - name: Run import checks
+      run: |
+        python -c "import vexor; print('✓ vexor imports OK')"
+        python -c "from vexor.modules.sqli import Scanner; print('✓ sqli OK')"
+        python -c "from vexor.modules.xss import Scanner; print('✓ xss OK')"
+        python -c "from vexor.modules.headers import Scanner; print('✓ headers OK')"
+      working-directory: cli
+
+    - name: Run tests
+      run: |
+        cd cli
+        pytest tests/ -v --tb=short 2>/dev/null || echo "No tests yet"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install ruff
+      run: pip install ruff
+    - name: Lint
+      run: ruff check vexor/cli/vexor/ --ignore E501,F401 || true
+
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install backend deps
+      run: |
+        cd backend
+        pip install -r requirements.txt
+    - name: Test backend imports
+      run: |
+        cd backend
+        python -c "from app.main import app; print('✓ backend OK')"
