@@ -75,7 +75,6 @@ class ProxyScreen(Widget):
                 yield TextArea(
                     "Select a request from history above...",
                     id="request-editor",
-                    language="http"
                 )
                 with Horizontal():
                     yield Button("→ Send to Repeater", id="btn-to-repeater")
@@ -87,7 +86,6 @@ class ProxyScreen(Widget):
                 yield TextArea(
                     "Response will appear here...",
                     id="response-viewer",
-                    language="http"
                 )
                 with Horizontal():
                     yield Button("→ Send to Comparer", id="btn-to-comparer")

@@ -60,9 +60,8 @@ class IntruderScreen(Widget):
             yield Input(placeholder="https://target.com/login", id="intruder-url")
             yield Static("[dim]Request Template (mark positions with §payload§):[/]")
             yield TextArea(
-                "POST /login HTTP/1.1\nHost: target.com\n\nusername=§admin§&password=§password§",
+                "POST /login HTTP/1.1\nHost: target.com\n\nusername=\xa7admin\xa7&password=\xa7password\xa7",
                 id="request-template",
-                language="http"
             )
             with Horizontal():
                 yield Select(

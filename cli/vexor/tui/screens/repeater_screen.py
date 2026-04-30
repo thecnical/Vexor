@@ -58,7 +58,6 @@ class RepeaterScreen(Widget):
                 yield TextArea(
                     "GET / HTTP/1.1\nHost: target.com\nUser-Agent: Vexor/1.0\n\n",
                     id="request-input",
-                    language="http"
                 )
 
             with Container(classes="response-area"):
@@ -66,7 +65,6 @@ class RepeaterScreen(Widget):
                 yield TextArea(
                     "Response will appear here after sending...",
                     id="response-output",
-                    language="http"
                 )
 
         yield Static("[bold bright_magenta]◈ REQUEST HISTORY[/]")
