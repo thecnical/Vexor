@@ -1,47 +1,34 @@
 """
-Vexor Header Widget — Beautiful ASCII logo + info
+Vexor Header Widget — Centered logo
 """
 from textual.widget import Widget
 from textual.app import ComposeResult
 from textual.widgets import Static
-from rich.text import Text
-from rich.panel import Panel
-from rich.columns import Columns
-from rich.console import Console
-from rich.align import Align
-import datetime
-
 from vexor.config import TOOL_VERSION, TOOL_AUTHOR, TOOL_TAGLINE
 
 
-LOGO = """[bold bright_cyan]██╗   ██╗███████╗██╗  ██╗ ██████╗ ██████╗ [/]
-[bold bright_cyan]██║   ██║██╔════╝╚██╗██╔╝██╔═══██╗██╔══██╗[/]
-[bold bright_cyan]██║   ██║█████╗   ╚███╔╝ ██║   ██║██████╔╝[/]
-[bold bright_magenta]╚██╗ ██╔╝██╔══╝   ██╔██╗ ██║   ██║██╔══██╗[/]
-[bold bright_magenta] ╚████╔╝ ███████╗██╔╝ ██╗╚██████╔╝██║  ██║[/]
-[bold bright_magenta]  ╚═══╝  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝[/]"""
-
-
 class VexorHeader(Widget):
-    """Beautiful Vexor Header with logo"""
+    """Centered Vexor Header"""
 
     DEFAULT_CSS = """
     VexorHeader {
-        height: 8;
+        height: 5;
         background: #0d0d1a;
         border-bottom: solid #00ffff;
-        padding: 0 2;
+        align: center middle;
+        content-align: center middle;
+    }
+    #header-content {
+        width: 100%;
+        content-align: center middle;
+        text-align: center;
     }
     """
 
     def compose(self) -> ComposeResult:
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         yield Static(
-            f"{LOGO}\n"
-            f"[dim]  AI-Powered CLI Security Toolkit[/]  "
-            f"[bright_cyan]v{TOOL_VERSION}[/]  "
-            f"[dim]|[/]  [bright_magenta]{TOOL_TAGLINE}[/]  "
-            f"[dim]|[/]  [dim]by {TOOL_AUTHOR}[/]  "
-            f"[dim]|[/]  [dim]{now}[/]",
+            f"[bold bright_cyan]██╗   ██╗███████╗██╗  ██╗ ██████╗ ██████╗[/]\n"
+            f"[bold bright_cyan]╚████╔╝ ███████╗██╔╝ ██╗╚██████╔╝██║  ██║[/]\n"
+            f"[bold bright_magenta] v{TOOL_VERSION}  ·  {TOOL_TAGLINE}  ·  {TOOL_AUTHOR}[/]",
             id="header-content"
         )
