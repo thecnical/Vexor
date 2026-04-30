@@ -74,3 +74,8 @@ vexor = "vexor.main:run"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["vexor*"]
+
+[tool.setuptools.package-data]
+"vexor" = ["payloads/*.txt"]
+"vexor.payloads" = ["*.txt"]
+"vexor.reports" = ["templates/*", "*.py"]
