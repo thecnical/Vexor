@@ -61,16 +61,13 @@ HUGGINGFACE_API_KEY = (from huggingface.co — free)
 
 Click **Deploy** — Render will build and deploy automatically.
 
-Your backend URL will be: `https://vexor-backend.onrender.com`
+Your backend URL: `https://vexor-backend-fnow.onrender.com` ✅ **LIVE**
 
 ## Step 7: Update CLI Config
 
-In `vexor/cli/vexor/config.py`:
+Already updated in `vexor/cli/vexor/config.py`:
 ```python
-BACKEND_URL = os.getenv("VEXOR_BACKEND_URL", "https://your-app.onrender.com")
+BACKEND_URL = os.getenv("VEXOR_BACKEND_URL", "https://vexor-backend-fnow.onrender.com")
 ```
 
-Or set environment variable:
-```bash
-export VEXOR_BACKEND_URL=https://your-app.onrender.com
-```
+Health check: `https://vexor-backend-fnow.onrender.com/api/v1/health`
