@@ -133,7 +133,7 @@ class Scanner(BaseScanner):
                     ))
 
     async def _check_api_endpoints(self) -> None:
-        """Check common API IDOR patterns"""
+        """Check common API IDOR patterns — only report if auth-protected data leaks"""
         api_patterns = [
             "/api/users/1",
             "/api/users/2",
@@ -150,21 +150,40 @@ class Scanner(BaseScanner):
         for pattern in api_patterns:
             url = base + pattern
             resp = await self.get(url)
-            if resp and resp.status_code == 200 and len(resp.content) > 50:
+            if resp and resp.status_code == 200 and len(resp.content) > 100:
+                # Must contain actual user data indicators — not just a 200 page
+                content = resp.text.lower()
+                data_indicators = [
+                    '"id":', '"user":', '"email":', '"name":', '"account":',
+                    '"username":', '"profile":', '"order":', '"data":',
+                ]
+                has_data = any(ind in content for ind in data_indicators)
+                if not has_data:
+                    continue
+
                 # Try next ID
                 next_url = base + pattern.replace("/1", "/2")
                 next_resp = await self.get(next_url)
                 if next_resp and next_resp.status_code == 200:
-                    self.add_finding(Finding(
-                        severity="HIGH",
-                        module=self.MODULE_NAME,
-                        vuln="API IDOR — Sequential IDs",
-                        endpoint=url,
-                        evidence=f"Both {url} and {next_url} return 200",
-                        description="API endpoint uses sequential IDs without authorization",
-                        remediation="Add authorization checks to all API endpoints",
-                    ))
-                    break
+                    next_content = next_resp.text.lower()
+                    next_has_data = any(ind in next_content for ind in data_indicators)
+                    if next_has_data:
+                        self.add_finding(Finding(
+                            severity="HIGH",
+                            module=self.MODULE_NAME,
+                            vuln="API IDOR — Sequential IDs",
+                            endpoint=url,
+                            evidence=(
+                                f"Both {url} and {next_url} return 200 with user data.\n"
+                                f"Response preview: {resp.text[:200]}"
+                            ),
+                            description=(
+                                "API endpoint uses sequential IDs without authorization. "
+                                "Both ID=1 and ID=2 return user data — IDOR confirmed."
+                            ),
+                            remediation="Add authorization checks to all API endpoints",
+                        ))
+                        break
 
     def _inject_param(self, url: str, param: str, value: str) -> str:
         parsed = urlparse(url)

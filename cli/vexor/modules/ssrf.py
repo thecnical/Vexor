@@ -82,10 +82,8 @@ class Scanner(BaseScanner):
             elif values and (values[0].startswith('http') or '/' in values[0]):
                 ssrf_candidates.append(param)
 
-        # Also test common param names even if not in URL
-        for param in SSRF_PARAMS[:10]:
-            if param not in ssrf_candidates:
-                ssrf_candidates.append(param)
+        # Only test params that actually exist in the URL — no guessing
+        # (guessing causes false positives on sites that don't have these params)
 
         for param in ssrf_candidates:
             await self._test_ssrf_param(self.target, param)
