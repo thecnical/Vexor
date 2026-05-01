@@ -21,6 +21,8 @@ from vexor.tui.screens.reports_screen import ReportsScreen
 from vexor.tui.screens.decoder_screen import DecoderScreen
 from vexor.tui.screens.comparer_screen import ComparerScreen
 from vexor.tui.screens.osint_screen import OSINTScreen
+from vexor.tui.screens.config_screen import ConfigScreen
+from vexor.tui.screens.plugins_screen import PluginsScreen
 from vexor.tui.widgets.header import VexorHeader
 from vexor.tui.widgets.sidebar import VexorSidebar
 from vexor.tui.widgets.status_bar import VexorStatusBar
@@ -38,7 +40,7 @@ VexorHeader {
 }
 
 VexorSidebar {
-    width: 20;
+    width: 24;
     background: #0d0d1a;
     border-right: solid #1a1a2e;
 }
@@ -182,15 +184,17 @@ Select {
 
 SCREEN_MAP = {
     "dashboard": ("dashboard-panel", DashboardScreen),
-    "proxy": ("proxy-panel", ProxyScreen),
-    "scanner": ("scanner-panel", ScannerScreen),
-    "intruder": ("intruder-panel", IntruderScreen),
-    "repeater": ("repeater-panel", RepeaterScreen),
-    "ai": ("ai-panel", AIScreen),
-    "reports": ("reports-panel", ReportsScreen),
-    "decoder": ("decoder-panel", DecoderScreen),
-    "comparer": ("comparer-panel", ComparerScreen),
-    "osint": ("osint-panel", OSINTScreen),
+    "proxy":     ("proxy-panel",     ProxyScreen),
+    "scanner":   ("scanner-panel",   ScannerScreen),
+    "intruder":  ("intruder-panel",  IntruderScreen),
+    "repeater":  ("repeater-panel",  RepeaterScreen),
+    "ai":        ("ai-panel",        AIScreen),
+    "reports":   ("reports-panel",   ReportsScreen),
+    "decoder":   ("decoder-panel",   DecoderScreen),
+    "comparer":  ("comparer-panel",  ComparerScreen),
+    "osint":     ("osint-panel",     OSINTScreen),
+    "config":    ("config-panel",    ConfigScreen),
+    "plugins":   ("plugins-panel",   PluginsScreen),
 }
 
 
@@ -216,6 +220,8 @@ class VexorApp(App):
         Binding("f10", "show_screen('osint')", "OSINT"),
         Binding("ctrl+h", "show_help", "Help", priority=True),
         Binding("ctrl+o", "toggle_offline", "Offline"),
+        Binding("ctrl+comma", "show_screen('config')", "Config"),
+        Binding("ctrl+p", "show_screen('plugins')", "Plugins"),
     ]
 
     def __init__(self):
@@ -338,20 +344,30 @@ class HelpScreen(Screen):
 | F7 | Reports |
 | F8 | Decoder |
 | F9 | Comparer |
-| F10 | OSINT / SpiderFoot |
+| F10 | OSINT Intelligence |
+| Ctrl+, | Config & Settings |
+| Ctrl+P | Plugins |
 | Ctrl+H | This Help |
 | Ctrl+O | Toggle Offline Mode |
 | Ctrl+Q | Quit |
 
+## OSINT Intelligence Engine
+6-Phase pipeline — just enter a target:
+1. Discovery (DNS, CT, WHOIS, passive subs)
+2. Live host check
+3. Deep recon (ports, SSL, crawl)
+4. Secret extraction (API keys, JWT, SQLi params)
+5. Threat intel (Shodan, VT, OTX via backend)
+6. AI correlation (attack chains, threat profile)
+
 ## Note
 **Results are preserved** when switching screens.
-Scanner results stay when you go to Intruder and come back.
 
 ## CLI Commands
 ```
 vexor                    # Launch TUI
 vexor scan <url>         # Quick scan
-vexor scan <url> --full  # Full scan (28 modules)
+vexor scan <url> --full  # Full scan
 vexor proxy              # Start proxy
 vexor auth login         # Login
 vexor update             # Update Vexor

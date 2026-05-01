@@ -33,6 +33,12 @@ SETTINGS_ITEMS = [
 
 
 class SidebarItem(Static):
+
+    class Navigate(Message):
+        def __init__(self, name: str) -> None:
+            super().__init__()
+            self.name = name
+
     def __init__(self, name: str, key: str, label: str, active: bool = False):
         self._name = name
         self._key = key
@@ -52,6 +58,9 @@ class SidebarItem(Static):
             self.add_class("active")
         else:
             self.remove_class("active")
+
+    def on_click(self) -> None:
+        self.post_message(self.Navigate(self._name))
 
 
 class SectionHeader(Static):
@@ -239,6 +248,13 @@ class VexorSidebar(Widget):
                 section.collapse()
             else:
                 section.expand()
+        except Exception:
+            pass
+
+    def on_sidebar_item_navigate(self, event: SidebarItem.Navigate) -> None:
+        """Route navigation to the app"""
+        try:
+            self.app.action_show_screen(event.name)
         except Exception:
             pass
 
