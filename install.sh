@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 #  VEXOR — AI-Powered CLI Security Toolkit
-#  Installation Script v1.0.2 — Python 3.13 + Kali Fixed
+#  Installation Script v4.0.0
 #  Created by Chandan Pandey (Technical)
 # ═══════════════════════════════════════════════════════════════
 
@@ -14,20 +14,36 @@ DIM='\033[2m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+# ─── Terminal width for centering ───────────────────────────
+TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
+
+center() {
+    local text="$1"
+    local clean="${text//$'\033'[*m/}"   # strip ANSI for length calc
+    clean=$(echo -e "$clean" | sed 's/\x1b\[[0-9;]*m//g')
+    local len=${#clean}
+    local pad=$(( (TERM_WIDTH - len) / 2 ))
+    printf "%${pad}s" ""
+    echo -e "$text"
+}
+
 clear
-echo -e "${CYAN}"
-echo "██╗   ██╗███████╗██╗  ██╗ ██████╗ ██████╗ "
-echo "██║   ██║██╔════╝╚██╗██╔╝██╔═══██╗██╔══██╗"
-echo "██║   ██║█████╗   ╚███╔╝ ██║   ██║██████╔╝"
-echo "╚██╗ ██╔╝██╔══╝   ██╔██╗ ██║   ██║██╔══██╗"
-echo " ╚████╔╝ ███████╗██╔╝ ██╗╚██████╔╝██║  ██║"
-echo "  ╚═══╝  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝"
-echo -e "${NC}"
-echo -e "${MAGENTA}${BOLD}  AI-Powered CLI Security Toolkit v1.0.0${NC}"
-echo -e "${DIM}  Penetrate. Analyze. Dominate.${NC}"
-echo -e "${DIM}  Created by Chandan Pandey (Technical)${NC}"
+
+# ─── Centered ASCII banner ───────────────────────────────────
 echo ""
-echo -e "${CYAN}══════════════════════════════════════════════${NC}"
+center "${CYAN}██╗   ██╗███████╗██╗  ██╗ ██████╗ ██████╗ ${NC}"
+center "${CYAN}██║   ██║██╔════╝╚██╗██╔╝██╔═══██╗██╔══██╗${NC}"
+center "${CYAN}██║   ██║█████╗   ╚███╔╝ ██║   ██║██████╔╝${NC}"
+center "${CYAN}╚██╗ ██╔╝██╔══╝   ██╔██╗ ██║   ██║██╔══██╗${NC}"
+center "${CYAN} ╚████╔╝ ███████╗██╔╝ ██╗╚██████╔╝██║  ██║${NC}"
+center "${CYAN}  ╚═══╝  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝${NC}"
+echo ""
+center "${MAGENTA}${BOLD}AI-Powered CLI Security Toolkit  v4.0.0${NC}"
+center "${DIM}Penetrate. Analyze. Dominate.${NC}"
+center "${DIM}Created by Chandan Pandey (Technical)${NC}"
+center "${DIM}26 Modules · 6-Phase OSINT · AI-Powered${NC}"
+echo ""
+center "${CYAN}══════════════════════════════════════════════${NC}"
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -287,24 +303,28 @@ else:
 
 # ─── Done ───────────────────────────────────────────────────
 echo ""
-echo -e "${CYAN}══════════════════════════════════════════════${NC}"
+center "${CYAN}══════════════════════════════════════════════${NC}"
 echo ""
 
 if command -v vexor &>/dev/null || [[ -f "$VEXOR_BIN" ]]; then
-    echo -e "${GREEN}${BOLD}  ✓ VEXOR INSTALLED SUCCESSFULLY!${NC}"
+    center "${GREEN}${BOLD}✓ VEXOR v4.0.0 INSTALLED SUCCESSFULLY!${NC}"
 else
-    echo -e "${YELLOW}  Run: source ~/.bashrc  then: vexor${NC}"
+    center "${YELLOW}Run: source ~/.bashrc  then: vexor${NC}"
 fi
 
 echo ""
-echo -e "${MAGENTA}  COMMANDS:${NC}"
+center "${MAGENTA}${BOLD}COMMANDS${NC}"
+echo ""
 echo -e "  ${GREEN}vexor${NC}                   → Launch TUI"
 echo -e "  ${GREEN}vexor scan <url>${NC}        → Quick scan"
-echo -e "  ${GREEN}vexor scan <url> --full${NC} → Full scan"
+echo -e "  ${GREEN}vexor scan <url> --full${NC} → Full scan (26 modules)"
 echo -e "  ${GREEN}vexor proxy${NC}             → Start proxy"
 echo -e "  ${GREEN}vexor auth login${NC}        → Login"
-echo -e "  ${GREEN}vexor update${NC}            → Update"
+echo -e "  ${GREEN}vexor update${NC}            → Update to latest"
 echo -e "  ${GREEN}vexor --offline${NC}         → Offline mode"
 echo ""
-echo -e "${DIM}  Created by Chandan Pandey (Technical)${NC}"
+echo -e "  ${DIM}F11 inside TUI → Config & Login${NC}"
+echo -e "  ${DIM}F10 inside TUI → OSINT Intelligence Engine${NC}"
+echo ""
+center "${DIM}Vexor v4.0.0 · Created by Chandan Pandey (Technical)${NC}"
 echo ""
