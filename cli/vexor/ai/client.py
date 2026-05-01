@@ -45,6 +45,60 @@ class AIClient:
         except Exception:
             return False
 
+    async def ensure_token(self) -> bool:
+        """
+        Ensure we have a valid token.
+        If not logged in, auto-register a guest account so AI works without manual login.
+        Returns True if token is available.
+        """
+        if self._token:
+            return True
+
+        # Try auto guest login
+        try:
+            import hashlib, platform
+            machine_id = hashlib.md5(platform.node().encode()).hexdigest()[:12]
+            guest_email = f"guest_{machine_id}@vexor.local"
+            guest_pass  = f"vexor_{machine_id}_guest"
+
+            async with httpx.AsyncClient(timeout=15) as client:
+                # Try login first
+                resp = await client.post(
+                    f"{API_BASE}/auth/login",
+                    json={"email": guest_email, "password": guest_pass},
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    self._token = data.get("access_token")
+                    TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+                    TOKEN_FILE.write_text(json.dumps({"access_token": self._token}))
+                    return True
+
+                # Register if login failed
+                resp2 = await client.post(
+                    f"{API_BASE}/auth/register",
+                    json={
+                        "email": guest_email,
+                        "password": guest_pass,
+                        "username": f"vexor_user_{machine_id[:6]}",
+                    },
+                )
+                if resp2.status_code == 200:
+                    # Now login
+                    resp3 = await client.post(
+                        f"{API_BASE}/auth/login",
+                        json={"email": guest_email, "password": guest_pass},
+                    )
+                    if resp3.status_code == 200:
+                        data = resp3.json()
+                        self._token = data.get("access_token")
+                        TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+                        TOKEN_FILE.write_text(json.dumps({"access_token": self._token}))
+                        return True
+        except Exception:
+            pass
+        return False
+
     async def analyze(
         self,
         request: str = "",
@@ -54,6 +108,9 @@ class AIClient:
         """Analyze vulnerability or request/response"""
         if self._offline:
             return self._offline_analyze(request, response, vulnerability)
+
+        # Auto-get token if not logged in
+        await self.ensure_token()
 
         try:
             async with httpx.AsyncClient(timeout=60) as client:
@@ -177,7 +234,11 @@ class AIClient:
         Run backend-proxied OSINT modules (Shodan, VT, OTX, URLScan, Chaos).
         Returns list of finding dicts. Empty list if offline or no token.
         """
-        if self._offline or not self._token:
+        if self._offline:
+            return []
+
+        await self.ensure_token()
+        if not self._token:
             return []
 
         try:
@@ -198,7 +259,11 @@ class AIClient:
         Check which backend OSINT modules are available (keys configured on Render).
         Returns dict like: {"shodan": True, "virustotal": False, ...}
         """
-        if self._offline or not self._token:
+        if self._offline:
+            return {}
+
+        await self.ensure_token()
+        if not self._token:
             return {}
 
         try:

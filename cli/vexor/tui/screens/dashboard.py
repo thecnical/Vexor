@@ -1,5 +1,5 @@
 """
-Vexor Dashboard v2.0.0 — Live stats from global state
+Vexor Dashboard v4.0.0 — Live stats from global state
 """
 from textual.app import ComposeResult
 from textual.widget import Widget
@@ -40,24 +40,25 @@ class DashboardScreen(Widget):
     """
 
     def compose(self) -> ComposeResult:
+        from vexor.config import TOOL_VERSION
         yield Static(
-            "[bold bright_cyan]◈ DASHBOARD[/]  "
-            "[dim]Welcome to Vexor — AI-Powered Security Toolkit[/]  "
-            "[bold bright_magenta on #1a0030] v2.0.0 [/]",
+            f"[bold bright_cyan]◈ DASHBOARD[/]  "
+            f"[dim]Welcome to Vexor — AI-Powered Security Toolkit[/]  "
+            f"[bold bright_magenta on #1a0030] v{TOOL_VERSION} [/]",
             classes="dash-title"
         )
 
-        # Backend status
+        # Backend + auth status
         yield Static(
             "[dim]Checking backend...[/]",
             id="backend-status",
             classes="backend-status"
         )
 
-        # Live stats — v2.0.0 badge in stats area
+        # Live stats
         with Horizontal(classes="stats-row"):
             yield Static(
-                "[dim]VERSION[/]\n[bold bright_magenta]v2.0.0[/]",
+                f"[dim]VERSION[/]\n[bold bright_magenta]v{TOOL_VERSION}[/]",
                 classes="stat-card",
                 id="stat-version"
             )
@@ -67,17 +68,17 @@ class DashboardScreen(Widget):
             yield Static("[dim]AI ANALYSES[/]\n[bold bright_green]0[/]", classes="stat-card", id="stat-ai")
             yield Static("[dim]PROXY REQS[/]\n[bold bright_yellow]0[/]", classes="stat-card", id="stat-proxy")
 
-        # What's New in v2.0
-        yield Static("[bold bright_magenta]◈ WHAT'S NEW IN v2.0[/]", classes="section-label")
+        # What's New in v4.0
+        yield Static("[bold bright_magenta]◈ WHAT'S NEW IN v4.0[/]", classes="section-label")
         with Container(classes="whats-new"):
             yield Static(
-                "[bold bright_cyan]🔥 Scanner[/]  50+ SQLi payloads · WAF bypass · MySQL/PG/MSSQL/Oracle · Header injection\n"
-                "[bold bright_cyan]⚡ Intruder[/]  50 parallel requests · req/s counter · smart interesting detection · progress bar\n"
-                "[bold bright_cyan]🌐 Proxy[/]    Match & replace rules · JWT/Bearer detection · WebSocket support · history search\n"
-                "[bold bright_cyan]🕵 OSINT[/]    10 modules: DNS · CT logs · email harvest · IP geo · port scan · Wayback · GitHub\n"
-                "[bold bright_cyan]🤖 AI Panel[/] Auto Exploit chain · CVSS Risk Score · Translate · provider info · chat history\n"
-                "[bold bright_cyan]📄 Reports[/]  Executive summary · risk gauge · severity charts · CVSS scores · PoC sections\n"
-                "[bold bright_cyan]◈ Sidebar[/]   Collapsible sections · item count · smooth toggle"
+                "[bold bright_cyan]🧠 Intelligence Engine[/]  6-Phase OSINT pipeline · Assetfinder · Hakrawler · Gf patterns · AI correlation\n"
+                "[bold bright_cyan]🔍 Scanner v3.0[/]        Custom Scan with checkboxes · False positive filter · AI analysis · Detail panel\n"
+                "[bold bright_cyan]🤖 AI (No Login)[/]       AI works without account · Guest token auto-generated · Multi-provider fallback\n"
+                "[bold bright_cyan]⚙️  Config Screen[/]       Login/logout in TUI · Backend URL · Scan defaults · Ctrl+, to open\n"
+                "[bold bright_cyan]🔌 Plugins Screen[/]      Plugin manager · ~/.vexor/plugins/ · Ctrl+P to open\n"
+                "[bold bright_cyan]🛡️  Threat Intel[/]        Shodan · VirusTotal · OTX · URLScan · Chaos DB (backend keys)\n"
+                "[bold bright_cyan]🔧 Fixes[/]               Ctrl+H help works · SSRF/IDOR false positives fixed · Responsive layout"
             )
 
         yield Static("[bold bright_magenta]◈ RECENT FINDINGS[/]", classes="section-label")
@@ -96,13 +97,14 @@ class DashboardScreen(Widget):
                 "[bright_cyan]F7[/] Reports\n"
                 "[bright_cyan]F8[/] Decoder  "
                 "[bright_cyan]F9[/] Comparer  "
-                "[bright_cyan]F10[/] OSINT/SpiderFoot  "
+                "[bright_cyan]F10[/] OSINT Intelligence  "
+                "[bright_magenta]Ctrl+,[/] Config  "
                 "[bright_magenta]Ctrl+H[/] Help  "
                 "[bright_magenta]Ctrl+Q[/] Quit"
             )
             yield Static(
-                f"[dim]Vexor v2.0.0 · {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')} · "
-                f"28 modules · F10 = SpiderFoot OSINT[/]",
+                f"[dim]Vexor v{TOOL_VERSION} · {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')} · "
+                f"26 modules · 6-phase OSINT · AI-powered[/]",
                 id="dash-footer"
             )
 
@@ -167,21 +169,30 @@ class DashboardScreen(Widget):
 
     @work(exclusive=True)
     async def check_backend(self) -> None:
-        """Check backend connectivity"""
+        """Check backend connectivity and auth status"""
         try:
             from vexor.ai.client import AIClient
+            from vexor.config import TOKEN_FILE
             client = AIClient()
             connected = await client.health_check()
+            logged_in = TOKEN_FILE.exists()
             status_widget = self.query_one("#backend-status")
-            if connected:
+            if connected and logged_in:
                 status_widget.update(
                     "[bright_green]● Backend CONNECTED[/]  "
-                    "[dim]AI features available[/]"
+                    "[bright_green]● Logged In[/]  "
+                    "[dim]All AI features active[/]"
+                )
+            elif connected and not logged_in:
+                status_widget.update(
+                    "[bright_green]● Backend CONNECTED[/]  "
+                    "[bright_yellow]● Not logged in[/]  "
+                    "[dim]Go to Config (Ctrl+,) to login · AI works in guest mode[/]"
                 )
             else:
                 status_widget.update(
-                    "[bright_yellow]● Backend OFFLINE[/]  "
-                    "[dim]AI features limited — use Ctrl+O for offline mode[/]"
+                    "[bright_red]● Backend OFFLINE[/]  "
+                    "[dim]AI unavailable · use Ctrl+O for offline mode[/]"
                 )
         except Exception:
             pass

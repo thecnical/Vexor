@@ -33,6 +33,7 @@ BANNER = f"""[bold bright_cyan]
 [bold bright_magenta]  AI-Powered CLI Security Toolkit  v{TOOL_VERSION}[/]
 [dim]  {TOOL_TAGLINE}[/]
 [dim]  Created by {TOOL_AUTHOR}[/]
+[dim]  Intelligence Engine · 26 Modules · 6-Phase OSINT · AI-Powered[/]
 """
 
 
