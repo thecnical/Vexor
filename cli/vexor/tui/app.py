@@ -208,20 +208,20 @@ class VexorApp(App):
     BINDINGS = [
         Binding("ctrl+q", "quit", "Quit", priority=True),
         Binding("escape", "quit", "Quit", priority=True),
-        Binding("f1", "show_screen('dashboard')", "Dashboard"),
-        Binding("f2", "show_screen('proxy')", "Proxy"),
-        Binding("f3", "show_screen('scanner')", "Scanner"),
-        Binding("f4", "show_screen('intruder')", "Intruder"),
-        Binding("f5", "show_screen('repeater')", "Repeater"),
-        Binding("f6", "show_screen('ai')", "AI Panel"),
-        Binding("f7", "show_screen('reports')", "Reports"),
-        Binding("f8", "show_screen('decoder')", "Decoder"),
-        Binding("f9", "show_screen('comparer')", "Comparer"),
-        Binding("f10", "show_screen('osint')", "OSINT"),
-        Binding("ctrl+h", "show_help", "Help", priority=True),
-        Binding("ctrl+o", "toggle_offline", "Offline"),
-        Binding("ctrl+comma", "show_screen('config')", "Config"),
-        Binding("ctrl+p", "show_screen('plugins')", "Plugins"),
+        Binding("f1",  "show_screen('dashboard')", "Dashboard"),
+        Binding("f2",  "show_screen('proxy')",     "Proxy"),
+        Binding("f3",  "show_screen('scanner')",   "Scanner"),
+        Binding("f4",  "show_screen('intruder')",  "Intruder"),
+        Binding("f5",  "show_screen('repeater')",  "Repeater"),
+        Binding("f6",  "show_screen('ai')",        "AI Panel"),
+        Binding("f7",  "show_screen('reports')",   "Reports"),
+        Binding("f8",  "show_screen('decoder')",   "Decoder"),
+        Binding("f9",  "show_screen('comparer')",  "Comparer"),
+        Binding("f10", "show_screen('osint')",     "OSINT"),
+        Binding("f11", "show_screen('config')",    "Config"),
+        Binding("f12", "show_screen('plugins')",   "Plugins"),
+        Binding("ctrl+h", "show_help",        "Help",    priority=True),
+        Binding("ctrl+o", "toggle_offline",   "Offline"),
     ]
 
     def __init__(self):
@@ -330,26 +330,31 @@ class HelpScreen(Screen):
     """
 
     HELP_TEXT = """
-# VEXOR — Help
+# VEXOR v4.0 — Help
 
 ## Navigation Keys
 | Key | Screen |
 |-----|--------|
-| F1 | Dashboard |
-| F2 | Proxy Interceptor |
-| F3 | Scanner |
-| F4 | Intruder |
-| F5 | Repeater |
-| F6 | AI Panel |
-| F7 | Reports |
-| F8 | Decoder |
-| F9 | Comparer |
+| F1  | Dashboard |
+| F2  | Proxy Interceptor |
+| F3  | Scanner |
+| F4  | Intruder |
+| F5  | Repeater |
+| F6  | AI Panel |
+| F7  | Reports |
+| F8  | Decoder |
+| F9  | Comparer |
 | F10 | OSINT Intelligence |
-| Ctrl+, | Config & Settings |
-| Ctrl+P | Plugins |
+| F11 | Config & Settings |
+| F12 | Plugins |
 | Ctrl+H | This Help |
 | Ctrl+O | Toggle Offline Mode |
 | Ctrl+Q | Quit |
+
+## Login / Auth
+Press **F11** to open Config screen.
+Enter email + password → click Login.
+Or use CLI: `vexor auth login`
 
 ## OSINT Intelligence Engine
 6-Phase pipeline — just enter a target:
@@ -359,9 +364,6 @@ class HelpScreen(Screen):
 4. Secret extraction (API keys, JWT, SQLi params)
 5. Threat intel (Shodan, VT, OTX via backend)
 6. AI correlation (attack chains, threat profile)
-
-## Note
-**Results are preserved** when switching screens.
 
 ## CLI Commands
 ```
@@ -374,7 +376,7 @@ vexor update             # Update Vexor
 vexor --offline          # Offline mode
 ```
 
-*Created by Chandan Pandey (Technical)*
+*Vexor v4.0 · Created by Chandan Pandey (Technical)*
 """
 
     def compose(self) -> ComposeResult:

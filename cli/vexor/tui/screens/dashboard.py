@@ -3,8 +3,8 @@ Vexor Dashboard v4.0.0 — Live stats from global state
 """
 from textual.app import ComposeResult
 from textual.widget import Widget
-from textual.widgets import Static, DataTable
-from textual.containers import Horizontal, Container
+from textual.widgets import Static, DataTable, Button
+from textual.containers import Horizontal, Container, Vertical
 from textual.reactive import reactive
 from textual import work
 import asyncio
@@ -30,12 +30,24 @@ class DashboardScreen(Widget):
     .activity-table { height: 10; border: solid #1a1a2e; margin-bottom: 1; }
     .quickstart { border: solid #1a1a2e; padding: 1; height: 7; }
     .section-label { color: #ff00ff; text-style: bold; height: 2; }
-    .backend-status { height: 2; margin-bottom: 1; }
+    .backend-row { height: 3; margin-bottom: 1; }
+    .backend-status-text { height: 3; content-align: left middle; }
     .whats-new {
         border: solid #ff00ff;
         padding: 1;
         margin-bottom: 1;
         height: auto;
+    }
+    #btn-quick-login {
+        height: 3;
+        width: 18;
+        border: solid #00ff88;
+        color: #00ff88;
+        margin-left: 2;
+    }
+    #btn-quick-login:hover {
+        background: #00ff88;
+        color: #0a0a0f;
     }
     """
 
@@ -48,12 +60,14 @@ class DashboardScreen(Widget):
             classes="dash-title"
         )
 
-        # Backend + auth status
-        yield Static(
-            "[dim]Checking backend...[/]",
-            id="backend-status",
-            classes="backend-status"
-        )
+        # Backend + auth status with quick login button
+        with Horizontal(classes="backend-row"):
+            yield Static(
+                "[dim]Checking backend...[/]",
+                id="backend-status",
+                classes="backend-status-text",
+            )
+            yield Button("🔑 Login (F11)", id="btn-quick-login")
 
         # Live stats
         with Horizontal(classes="stats-row"):
@@ -97,8 +111,9 @@ class DashboardScreen(Widget):
                 "[bright_cyan]F7[/] Reports\n"
                 "[bright_cyan]F8[/] Decoder  "
                 "[bright_cyan]F9[/] Comparer  "
-                "[bright_cyan]F10[/] OSINT Intelligence  "
-                "[bright_magenta]Ctrl+,[/] Config  "
+                "[bright_cyan]F10[/] OSINT  "
+                "[bright_magenta]F11[/] Config/Login  "
+                "[bright_magenta]F12[/] Plugins  "
                 "[bright_magenta]Ctrl+H[/] Help  "
                 "[bright_magenta]Ctrl+Q[/] Quit"
             )
@@ -116,6 +131,14 @@ class DashboardScreen(Widget):
     def on_show(self) -> None:
         """Called every time dashboard becomes visible"""
         self.refresh_stats()
+        self.check_backend()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-quick-login":
+            try:
+                self.app.action_show_screen("config")
+            except Exception:
+                pass
 
     def refresh_stats(self) -> None:
         """Update stats from global state"""

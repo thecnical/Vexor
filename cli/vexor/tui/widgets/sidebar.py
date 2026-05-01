@@ -27,8 +27,8 @@ TOOL_ITEMS = [
 ]
 
 SETTINGS_ITEMS = [
-    ("config",   "",    "Config"),
-    ("plugins",  "",    "Plugins"),
+    ("config",   "F11", "Config"),
+    ("plugins",  "F12", "Plugins"),
 ]
 
 
