@@ -218,7 +218,7 @@ class VexorApp(App):
         Binding("f8",  "show_screen('decoder')",   "Decoder"),
         Binding("f9",  "show_screen('comparer')",  "Comparer"),
         Binding("f10", "show_screen('osint')",     "OSINT"),
-        Binding("f11", "show_screen('config')",    "Config",  priority=True),
+        Binding("grave_accent", "show_screen('config')",  "Config",  priority=True),
         Binding("f12", "show_screen('plugins')",   "Plugins", priority=True),
         Binding("ctrl+h", "show_help",             "Help",    priority=True),
         Binding("ctrl+o", "toggle_offline",        "Offline"),
@@ -345,14 +345,14 @@ class HelpScreen(Screen):
 | F8  | Decoder |
 | F9  | Comparer |
 | F10 | OSINT Intelligence |
-| F11 | Config & Settings |
+| ` (backtick) | Config & Settings |
 | F12 | Plugins |
 | Ctrl+H | This Help |
 | Ctrl+O | Toggle Offline Mode |
 | Ctrl+Q | Quit |
 
 ## Login / Auth
-Press **F11** to open Config screen.
+Press **`** (backtick) to open Config screen.
 Enter email + password → click Login.
 Or use CLI: `vexor auth login`
 

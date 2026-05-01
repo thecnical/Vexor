@@ -67,7 +67,7 @@ class DashboardScreen(Widget):
                 id="backend-status",
                 classes="backend-status-text",
             )
-            yield Button("🔑 Login (F11)", id="btn-quick-login")
+            yield Button("🔑 Login (`)", id="btn-quick-login")
 
         # Live stats
         with Horizontal(classes="stats-row"):
@@ -112,7 +112,7 @@ class DashboardScreen(Widget):
                 "[bright_cyan]F8[/] Decoder  "
                 "[bright_cyan]F9[/] Comparer  "
                 "[bright_cyan]F10[/] OSINT  "
-                "[bright_magenta]F11[/] Config/Login  "
+                "[bright_magenta]`[/] Config/Login  "
                 "[bright_magenta]F12[/] Plugins  "
                 "[bright_magenta]Ctrl+H[/] Help  "
                 "[bright_magenta]Ctrl+Q[/] Quit"
