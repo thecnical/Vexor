@@ -206,8 +206,8 @@ class VexorApp(App):
     SUB_TITLE = TOOL_TAGLINE
 
     BINDINGS = [
-        Binding("ctrl+q", "quit", "Quit", priority=True),
-        Binding("escape", "quit", "Quit", priority=True),
+        Binding("ctrl+q", "quit",                  "Quit",    priority=True),
+        Binding("escape", "quit",                  "Quit",    priority=True),
         Binding("f1",  "show_screen('dashboard')", "Dashboard"),
         Binding("f2",  "show_screen('proxy')",     "Proxy"),
         Binding("f3",  "show_screen('scanner')",   "Scanner"),
@@ -218,10 +218,10 @@ class VexorApp(App):
         Binding("f8",  "show_screen('decoder')",   "Decoder"),
         Binding("f9",  "show_screen('comparer')",  "Comparer"),
         Binding("f10", "show_screen('osint')",     "OSINT"),
-        Binding("f11", "show_screen('config')",    "Config"),
-        Binding("f12", "show_screen('plugins')",   "Plugins"),
-        Binding("ctrl+h", "show_help",        "Help",    priority=True),
-        Binding("ctrl+o", "toggle_offline",   "Offline"),
+        Binding("f11", "show_screen('config')",    "Config",  priority=True),
+        Binding("f12", "show_screen('plugins')",   "Plugins", priority=True),
+        Binding("ctrl+h", "show_help",             "Help",    priority=True),
+        Binding("ctrl+o", "toggle_offline",        "Offline"),
     ]
 
     def __init__(self):
