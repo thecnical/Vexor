@@ -179,7 +179,57 @@ $PIP_CMD install -e . $PIP_FLAGS 2>/dev/null && \
     }
 }
 
-# ─── PATH + vexor command ───────────────────────────────────
+# ─── Optional OSINT tools (Go binaries) ─────────────────────
+echo -e "${CYAN}[6b/6] Installing optional OSINT tools...${NC}"
+
+# nmap — already in apt list above, just confirm
+if command -v nmap &>/dev/null; then
+    echo -e "${GREEN}    ✓ nmap (already installed)${NC}"
+else
+    sudo apt-get install -y -qq nmap 2>/dev/null && \
+        echo -e "${GREEN}    ✓ nmap${NC}" || \
+        echo -e "${DIM}    - nmap (skipped)${NC}"
+fi
+
+# findomain
+if ! command -v findomain &>/dev/null; then
+    echo -e "${CYAN}    Installing findomain...${NC}"
+    FINDOMAIN_URL="https://github.com/Findomain/Findomain/releases/latest/download/findomain-linux-i386.zip"
+    wget -q "$FINDOMAIN_URL" -O /tmp/findomain.zip 2>/dev/null && \
+        unzip -q /tmp/findomain.zip -d /tmp/ 2>/dev/null && \
+        chmod +x /tmp/findomain && \
+        sudo mv /tmp/findomain /usr/local/bin/ 2>/dev/null && \
+        echo -e "${GREEN}    ✓ findomain${NC}" || \
+        echo -e "${DIM}    - findomain (skipped — install manually)${NC}"
+    rm -f /tmp/findomain.zip 2>/dev/null
+else
+    echo -e "${GREEN}    ✓ findomain (already installed)${NC}"
+fi
+
+# Go tools — only if Go is installed
+if command -v go &>/dev/null; then
+    echo -e "${CYAN}    Go detected — installing OSINT tools...${NC}"
+    export GOPATH="$HOME/go"
+    export PATH="$GOPATH/bin:$PATH"
+
+    go install github.com/tomnomnom/assetfinder@latest 2>/dev/null && \
+        echo -e "${GREEN}    ✓ assetfinder${NC}" || \
+        echo -e "${DIM}    - assetfinder (skipped)${NC}"
+
+    go install github.com/hakluke/hakrawler@latest 2>/dev/null && \
+        echo -e "${GREEN}    ✓ hakrawler${NC}" || \
+        echo -e "${DIM}    - hakrawler (skipped)${NC}"
+
+    # Add GOPATH/bin to PATH permanently
+    if ! grep -q 'GOPATH/bin' "$SHELL_RC" 2>/dev/null; then
+        echo 'export PATH="$HOME/go/bin:$PATH"' >> "$SHELL_RC"
+    fi
+else
+    echo -e "${DIM}    - Go not found — skipping assetfinder/hakrawler${NC}"
+    echo -e "${DIM}      Install Go: https://go.dev/dl/ then re-run install.sh${NC}"
+fi
+
+
 echo -e "${CYAN}[6/6] Setting up vexor command...${NC}"
 
 # Create vexor wrapper script

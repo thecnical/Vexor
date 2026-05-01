@@ -172,6 +172,118 @@ class AIClient:
         except Exception:
             return "AI offline"
 
+    async def osint_scan(self, target: str, modules: list[str] = []) -> list[dict]:
+        """
+        Run backend-proxied OSINT modules (Shodan, VT, OTX, URLScan, Chaos).
+        Returns list of finding dicts. Empty list if offline or no token.
+        """
+        if self._offline or not self._token:
+            return []
+
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.post(
+                    f"{API_BASE}/osint/scan",
+                    json={"target": target, "modules": modules},
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("findings", [])
+                return []
+        except Exception:
+            return []
+
+    async def osint_status(self) -> dict:
+        """
+        Check which backend OSINT modules are available (keys configured on Render).
+        Returns dict like: {"shodan": True, "virustotal": False, ...}
+        """
+        if self._offline or not self._token:
+            return {}
+
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    f"{API_BASE}/osint/status",
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                return {}
+        except Exception:
+            return {}
+
+    async def osint_ai_correlate(self, domain: str, findings_summary: str) -> str:
+        """
+        Master OSINT AI — attack chains, threat profile, prioritized actions.
+        Returns markdown-formatted intelligence report.
+        """
+        if self._offline or not self._token:
+            return ""
+        try:
+            async with httpx.AsyncClient(timeout=120) as client:
+                resp = await client.post(
+                    f"{API_BASE}/osint/ai/correlate",
+                    json={"domain": domain, "findings_summary": findings_summary},
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("result", "")
+                return ""
+        except Exception:
+            return ""
+
+    async def osint_ai_subdomain_intel(self, domain: str, subdomains: list) -> str:
+        """AI analysis of subdomain list for attack vectors"""
+        if self._offline or not self._token:
+            return ""
+        try:
+            async with httpx.AsyncClient(timeout=90) as client:
+                resp = await client.post(
+                    f"{API_BASE}/osint/ai/subdomain-intel",
+                    json={"domain": domain, "subdomains": subdomains},
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("result", "")
+                return ""
+        except Exception:
+            return ""
+
+    async def osint_ai_secret_analysis(self, domain: str, secrets: list) -> str:
+        """AI deep analysis of leaked secrets"""
+        if self._offline or not self._token:
+            return ""
+        try:
+            async with httpx.AsyncClient(timeout=90) as client:
+                resp = await client.post(
+                    f"{API_BASE}/osint/ai/secret-analysis",
+                    json={"domain": domain, "secrets": secrets},
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("result", "")
+                return ""
+        except Exception:
+            return ""
+
+    async def osint_ai_live_hosts(self, domain: str, live_hosts: list) -> str:
+        """AI attack surface analysis of live hosts"""
+        if self._offline or not self._token:
+            return ""
+        try:
+            async with httpx.AsyncClient(timeout=90) as client:
+                resp = await client.post(
+                    f"{API_BASE}/osint/ai/live-hosts",
+                    json={"domain": domain, "live_hosts": live_hosts},
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("result", "")
+                return ""
+        except Exception:
+            return ""
+
     def _offline_analyze(self, request: str, response: str, vuln: str) -> str:
         """Basic offline analysis"""
         notes = []

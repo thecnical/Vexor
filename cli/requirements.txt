@@ -27,6 +27,9 @@ python-dotenv==1.0.1
 dnspython==2.6.1
 scapy==2.5.0
 
+# OSINT
+python-whois==0.9.4
+
 # Proxy
 mitmproxy==10.3.1
 

@@ -214,7 +214,7 @@ class VexorApp(App):
         Binding("f8", "show_screen('decoder')", "Decoder"),
         Binding("f9", "show_screen('comparer')", "Comparer"),
         Binding("f10", "show_screen('osint')", "OSINT"),
-        Binding("ctrl+h", "show_help", "Help"),
+        Binding("ctrl+h", "show_help", "Help", priority=True),
         Binding("ctrl+o", "toggle_offline", "Offline"),
     ]
 

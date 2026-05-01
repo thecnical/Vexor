@@ -9,6 +9,8 @@ from vexor.config import TOOL_VERSION, TOOL_AUTHOR, TOOL_TAGLINE
 
 class VexorHeader(Widget):
 
+    can_focus = False  # Prevent header from intercepting keyboard shortcuts
+
     DEFAULT_CSS = """
     VexorHeader {
         height: 4;
