@@ -119,26 +119,45 @@ class Scanner(BaseScanner):
                 ))
                 return
 
-            # Check for unusual response (might indicate blind SSRF)
-            if resp.status_code == 200 and len(resp.content) > 500:
-                # Different response than normal might indicate SSRF
-                normal_resp = await self.get(url)
-                if normal_resp and abs(len(resp.content) - len(normal_resp.content)) > 200:
+            # Blind SSRF: timing-based detection
+            # Cloud metadata endpoint should respond faster than random external URL
+            # Only report if response time is suspiciously fast for internal endpoint
+            import time
+            if "169.254.169.254" in payload or "metadata.google" in payload:
+                t0 = time.time()
+                timing_resp = await self.get(test_url)
+                elapsed = time.time() - t0
+                # If metadata endpoint responds in < 0.5s, likely internal access
+                if timing_resp and timing_resp.status_code == 200 and elapsed < 0.5:
                     self.add_finding(Finding(
                         severity="HIGH",
                         module=self.MODULE_NAME,
-                        vuln="Potential Blind SSRF",
+                        vuln="Potential Blind SSRF — Cloud Metadata",
                         endpoint=url,
                         param=param,
                         payload=payload,
-                        evidence=f"Unusual response size difference with payload: {payload}",
-                        description=f"Possible blind SSRF in parameter '{param}'",
-                        remediation="Validate all URL inputs, block internal network access",
+                        evidence=(
+                            f"Cloud metadata endpoint responded in {elapsed:.3f}s "
+                            f"(fast response suggests internal access)\n"
+                            f"Payload: {payload}"
+                        ),
+                        description=(
+                            f"Parameter '{param}' may allow SSRF to cloud metadata. "
+                            f"Fast response ({elapsed:.3f}s) to metadata endpoint suggests server-side fetch."
+                        ),
+                        remediation=(
+                            "Block requests to 169.254.169.254 and metadata.google.internal. "
+                            "Implement URL allowlisting."
+                        ),
                     ))
                     return
 
     async def _scan_form_inputs(self) -> None:
-        """Scan form inputs for SSRF"""
+        """
+        Scan form inputs for SSRF — only report if actual SSRF proof exists.
+        Form input detection alone is NOT a finding (too many false positives).
+        Instead, test the form submission with SSRF payloads.
+        """
         response = await self.get(self.target)
         if not response:
             return
@@ -147,25 +166,54 @@ class Scanner(BaseScanner):
             from bs4 import BeautifulSoup
             soup = BeautifulSoup(response.text, 'lxml')
 
-            for inp in soup.find_all('input'):
-                name = inp.get('name', '').lower()
-                inp_type = inp.get('type', 'text').lower()
+            for form in soup.find_all('form'):
+                action = form.get('action', self.target)
+                method = form.get('method', 'get').lower()
 
-                if inp_type in ['hidden', 'submit', 'button', 'checkbox', 'radio']:
-                    continue
+                from urllib.parse import urljoin
+                form_url = urljoin(self.target, action)
 
-                if any(ssrf_param in name for ssrf_param in SSRF_PARAMS):
-                    # Found potential SSRF input
-                    self.add_finding(Finding(
-                        severity="MEDIUM",
-                        module=self.MODULE_NAME,
-                        vuln="Potential SSRF Input Field",
-                        endpoint=self.target,
-                        param=name,
-                        evidence=f"Input field '{name}' may accept URLs",
-                        description=f"Form input '{name}' could be vulnerable to SSRF",
-                        remediation="Validate and sanitize URL inputs in forms",
-                    ))
+                for inp in form.find_all('input'):
+                    name = inp.get('name', '').lower()
+                    inp_type = inp.get('type', 'text').lower()
+
+                    if inp_type in ['hidden', 'submit', 'button', 'checkbox', 'radio']:
+                        continue
+
+                    if not any(ssrf_param == name for ssrf_param in SSRF_PARAMS):
+                        continue
+
+                    # Actually test the form with SSRF payloads
+                    for payload in SSRF_PAYLOADS[:4]:
+                        try:
+                            if method == 'post':
+                                resp = await self.post(form_url, data={name: payload})
+                            else:
+                                resp = await self.get(
+                                    self._inject_param(form_url, name, payload)
+                                )
+
+                            if resp and self._has_ssrf_indicator(resp.text):
+                                self.add_finding(Finding(
+                                    severity="CRITICAL",
+                                    module=self.MODULE_NAME,
+                                    vuln=f"SSRF via Form Input (param: {name})",
+                                    endpoint=form_url,
+                                    param=name,
+                                    payload=payload,
+                                    evidence=self._extract_evidence(resp.text),
+                                    description=(
+                                        f"Form input '{name}' is vulnerable to SSRF. "
+                                        f"Server fetched internal resource: {payload}"
+                                    ),
+                                    remediation=(
+                                        "Validate and whitelist allowed URLs in form inputs. "
+                                        "Block requests to internal/metadata endpoints."
+                                    ),
+                                ))
+                                return
+                        except Exception:
+                            continue
         except Exception:
             pass
 

@@ -157,16 +157,40 @@ class VexorCallbackServer:
                 pass
 
     def _extract_token(self, request: str) -> str:
-        """Extract token from HTTP request path"""
+        """Extract token from HTTP request path — handles query strings and encoding"""
         try:
             first_line = request.split("\r\n")[0]
-            # GET /cb/<token> HTTP/1.1
+            # GET /cb/<token>?extra=data HTTP/1.1
             parts = first_line.split(" ")
-            if len(parts) >= 2:
-                path = parts[1]
-                segments = path.strip("/").split("/")
-                if len(segments) >= 2 and segments[0] == "cb":
-                    return segments[1]
+            if len(parts) < 2:
+                return "unknown"
+
+            raw_path = parts[1]
+
+            # Strip query string
+            if "?" in raw_path:
+                raw_path = raw_path.split("?")[0]
+
+            # URL decode
+            from urllib.parse import unquote
+            path = unquote(raw_path)
+
+            # Extract token from /cb/<token>
+            segments = path.strip("/").split("/")
+            if len(segments) >= 2 and segments[0] == "cb":
+                token = segments[1].strip()
+                if token and len(token) == 12:  # Our tokens are 12 hex chars
+                    return token
+
+            # Also check if token is in query string
+            if "?" in parts[1]:
+                qs = parts[1].split("?")[1]
+                for kv in qs.split("&"):
+                    if "=" in kv:
+                        k, v = kv.split("=", 1)
+                        if k == "token" and len(v) == 12:
+                            return v
+
         except Exception:
             pass
         return "unknown"

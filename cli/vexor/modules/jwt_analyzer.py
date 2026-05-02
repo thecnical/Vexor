@@ -133,8 +133,9 @@ class Scanner(BaseScanner):
             pass
 
     async def _test_weak_secret(self, token: str, parts: list, alg: str) -> None:
-        """Test for weak HMAC secret"""
+        """Test for weak HMAC secret — fixed encoding"""
         header_payload = f"{parts[0]}.{parts[1]}"
+        # original_sig is base64url-decoded bytes
         original_sig = self._base64url_decode(parts[2])
 
         hash_func = {
@@ -145,14 +146,15 @@ class Scanner(BaseScanner):
 
         for secret in WEAK_SECRETS:
             try:
-                # Python hmac: hmac.new(key, msg, digestmod)
+                # HMAC: sign header.payload with secret
                 h = hmac.new(
-                    key=secret.encode(),
-                    msg=header_payload.encode(),
+                    key=secret.encode('utf-8'),
+                    msg=header_payload.encode('utf-8'),
                     digestmod=hash_func
                 )
-                computed = h.digest()
+                computed = h.digest()  # raw bytes
 
+                # Both are raw bytes — compare directly
                 if hmac.compare_digest(computed, original_sig):
                     self.add_finding(Finding(
                         severity="CRITICAL",
@@ -160,10 +162,14 @@ class Scanner(BaseScanner):
                         vuln="JWT Weak Secret Key",
                         endpoint=self.target,
                         evidence=f"JWT signed with weak secret: '{secret}'",
-                        description=f"JWT HMAC secret is weak: '{secret}'",
+                        description=(
+                            f"JWT HMAC secret is weak: '{secret}'. "
+                            "Attacker can forge arbitrary JWT tokens."
+                        ),
                         remediation=(
                             "Use a strong random secret (min 256 bits). "
-                            "Rotate the secret immediately."
+                            "Rotate the secret immediately. "
+                            "Invalidate all existing tokens."
                         ),
                     ))
                     return
