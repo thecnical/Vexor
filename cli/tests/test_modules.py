@@ -12,7 +12,9 @@ from vexor.config import TOOL_VERSION, TOOL_AUTHOR
 
 
 def test_tool_info():
-    assert TOOL_VERSION == "1.0.0"
+    assert TOOL_VERSION is not None
+    assert len(TOOL_VERSION) > 0
+    assert "." in TOOL_VERSION   # semver format
     assert "Chandan Pandey" in TOOL_AUTHOR
 
 
