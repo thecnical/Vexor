@@ -1,9 +1,10 @@
 """
-Vexor Repeater Screen — Fixed responsive layout
+Vexor Repeater Screen v3.0 — Manual Request Manipulation
++ Send to Scanner · AI Analysis · Request History
 """
 from textual.app import ComposeResult
 from textual.widget import Widget
-from textual.widgets import Static, Input, Button, TextArea, Log
+from textual.widgets import Static, Input, Button, TextArea, Log, Select
 from textual.containers import Horizontal, Vertical, Container
 from textual import work
 import httpx
@@ -18,38 +19,15 @@ class RepeaterScreen(Widget):
         padding: 0 1;
         overflow-y: auto;
     }
-    .repeater-title {
-        height: 2;
-        color: #00ffff;
-        text-style: bold;
-    }
-    .url-row {
-        height: 3;
-        margin-bottom: 1;
-    }
-    .btn-row {
-        height: 3;
-        margin-bottom: 1;
-    }
-    .req-resp-row {
-        height: 20;
-        margin-bottom: 1;
-    }
-    .request-area {
-        border: solid #00ffff;
-        padding: 1;
-    }
-    .response-area {
-        border: solid #ff00ff;
-        padding: 1;
-    }
-    .req-textarea {
-        height: 14;
-    }
-    .history-log {
-        height: 6;
-        border: solid #1a1a2e;
-    }
+    .repeater-title { height: 2; color: #00ffff; text-style: bold; }
+    .url-row { height: 3; margin-bottom: 1; }
+    .btn-row { height: 3; margin-bottom: 1; }
+    .btn-row Button { height: 3; margin-right: 1; }
+    .req-resp-row { height: 20; margin-bottom: 1; }
+    .request-area { border: solid #00ffff; padding: 1; width: 1fr; }
+    .response-area { border: solid #ff00ff; padding: 1; width: 1fr; }
+    .req-textarea { height: 14; }
+    .history-log { height: 6; border: solid #1a1a2e; }
     """
 
     def compose(self) -> ComposeResult:
@@ -62,20 +40,20 @@ class RepeaterScreen(Widget):
             yield Input(placeholder="https://target.com/api/endpoint", id="repeater-url")
 
         with Horizontal(classes="btn-row"):
-            yield Button("▶ Send", id="btn-send", classes="success")
-            yield Button("⊘ Clear", id="btn-clear")
-            yield Button("🤖 AI Analyze", id="btn-ai")
-            yield Button("+ New Tab", id="btn-new-tab")
+            yield Button("▶ Send",           id="btn-send",          classes="success")
+            yield Button("🔍 Send to Scanner", id="btn-send-scanner")
+            yield Button("⚔ Send to Intruder", id="btn-send-intruder")
+            yield Button("🤖 AI Analyze",    id="btn-ai")
+            yield Button("⊘ Clear",          id="btn-clear")
 
         with Horizontal(classes="req-resp-row"):
             with Container(classes="request-area"):
                 yield Static("[bold bright_cyan]REQUEST[/]  [dim](Edit and send)[/]")
                 yield TextArea(
-                    "GET / HTTP/1.1\nHost: target.com\nUser-Agent: Vexor/1.0\n\n",
+                    "GET / HTTP/1.1\nHost: target.com\nUser-Agent: Vexor/4.0\n\n",
                     id="request-input",
                     classes="req-textarea"
                 )
-
             with Container(classes="response-area"):
                 yield Static("[bold bright_magenta]RESPONSE[/]")
                 yield TextArea(
@@ -88,15 +66,20 @@ class RepeaterScreen(Widget):
         yield Log(classes="history-log", id="history-log")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "btn-send":
+        bid = event.button.id
+        if bid == "btn-send":
             self.send_request()
-        elif event.button.id == "btn-clear":
+        elif bid == "btn-send-scanner":
+            self._send_to_scanner()
+        elif bid == "btn-send-intruder":
+            self._send_to_intruder()
+        elif bid == "btn-clear":
             try:
-                self.query_one("#request-input", TextArea).clear()
-                self.query_one("#response-output", TextArea).clear()
+                self.query_one("#request-input",  TextArea).load_text("")
+                self.query_one("#response-output", TextArea).load_text("")
             except Exception:
                 pass
-        elif event.button.id == "btn-ai":
+        elif bid == "btn-ai":
             self.ai_analyze()
 
     @work(exclusive=True)
@@ -111,7 +94,7 @@ class RepeaterScreen(Widget):
 
         log.write_line(f"[*] Sending to {url}...")
         try:
-            lines = raw_request.strip().split('\n')
+            lines = raw_request.strip().split("\n")
             method_line = lines[0].split()
             method = method_line[0] if method_line else "GET"
 
@@ -146,18 +129,52 @@ class RepeaterScreen(Widget):
             self.query_one("#response-output", TextArea).load_text(f"Error: {str(e)}")
             log.write_line(f"[!] Error: {str(e)}")
 
+    def _send_to_scanner(self) -> None:
+        """Send current URL to Scanner screen and start a scan"""
+        url = self.query_one("#repeater-url", Input).value.strip()
+        if not url:
+            self.notify("Enter a URL first", severity="error")
+            return
+        try:
+            from vexor.tui.screens.scanner_screen import ScannerScreen
+            scanner = self.app.query_one("#scanner-panel", ScannerScreen)
+            scanner.query_one("#scan-target").value = url
+            self.app.action_show_screen("scanner")
+            self.notify(f"Sent to Scanner: {url}", severity="information")
+        except Exception as e:
+            self.notify(f"Error: {e}", severity="error")
+
+    def _send_to_intruder(self) -> None:
+        """Send current URL + request to Intruder screen"""
+        url = self.query_one("#repeater-url", Input).value.strip()
+        request = self.query_one("#request-input", TextArea).text
+        if not url:
+            self.notify("Enter a URL first", severity="error")
+            return
+        try:
+            from vexor.tui.screens.intruder_screen import IntruderScreen
+            intruder = self.app.query_one("#intruder-panel", IntruderScreen)
+            intruder.query_one("#intruder-url").value = url
+            intruder.query_one("#request-template").load_text(request)
+            self.app.action_show_screen("intruder")
+            self.notify(f"Sent to Intruder: {url}", severity="information")
+        except Exception as e:
+            self.notify(f"Error: {e}", severity="error")
+
     @work(exclusive=True)
     async def ai_analyze(self) -> None:
-        request = self.query_one("#request-input", TextArea).text
+        request  = self.query_one("#request-input",  TextArea).text
         response = self.query_one("#response-output", TextArea).text
-        if not request:
+        if not request.strip():
             self.notify("Send a request first", severity="warning")
             return
-        self.notify("Analyzing...", severity="information")
+        self.notify("Analyzing with AI...", severity="information")
         try:
             from vexor.ai.client import AIClient
             client = AIClient()
             analysis = await client.analyze(request=request, response=response)
-            self.notify(f"AI: {analysis[:100]}...", severity="information")
+            log = self.query_one("#history-log", Log)
+            log.write_line(f"[🤖 AI] {analysis[:200]}")
+            self.notify("AI analysis complete — see log", severity="information")
         except Exception as e:
             self.notify(f"AI error: {str(e)}", severity="error")

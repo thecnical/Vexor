@@ -146,6 +146,8 @@ class IntruderScreen(Widget):
             self.generate_ai_payloads()
         elif event.button.id == "btn-builtin":
             self._load_builtin_payloads("general")
+        elif event.button.id == "btn-load-file":
+            self._load_seclists()
 
     @work(exclusive=True)
     async def start_attack(self) -> None:
@@ -366,8 +368,7 @@ class IntruderScreen(Widget):
             self.notify(f"AI error: {str(e)[:50]}", severity="error")
             self._load_builtin_payloads("general")
 
-    def _load_builtin_payloads(self, payload_type: str) -> None:
-        builtin = {
+    def _load_builtin_payloads(self, payload_type: str) -> None:        builtin = {
             "auth_bypass": [
                 "admin", "administrator", "root", "test", "guest",
                 "' OR '1'='1", "' OR 1=1--", "admin'--",
@@ -395,3 +396,56 @@ class IntruderScreen(Widget):
         payloads = builtin.get(payload_type, builtin["general"])
         self.query_one("#payload-list", TextArea).load_text("\n".join(payloads))
         self.notify(f"Loaded {len(payloads)} built-in payloads", severity="information")
+
+    @work(exclusive=False)
+    async def _load_seclists(self) -> None:
+        """
+        Feature 4: SecLists Integration
+        Downloads and uses community wordlists from SecLists GitHub.
+        Falls back to built-in payloads if download fails.
+        """
+        SECLISTS = {
+            "passwords": "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000.txt",
+            "usernames": "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Usernames/top-usernames-shortlist.txt",
+            "sqli":      "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Fuzzing/SQLi/Generic-SQLi.txt",
+            "xss":       "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Fuzzing/XSS/XSS-Jhaddix.txt",
+            "dirs":      "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/common.txt",
+            "lfi":       "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Fuzzing/LFI/LFI-Jhaddix.txt",
+        }
+
+        # Detect best list based on request template
+        template = self.query_one("#request-template", TextArea).text.lower()
+        url = self.query_one("#intruder-url", Input).value.lower()
+
+        if "password" in template or "login" in url:
+            list_name, list_url = "passwords", SECLISTS["passwords"]
+        elif "username" in template or "user" in template:
+            list_name, list_url = "usernames", SECLISTS["usernames"]
+        elif "search" in template or "q=" in template:
+            list_name, list_url = "xss", SECLISTS["xss"]
+        elif "id=" in template or "sql" in template:
+            list_name, list_url = "sqli", SECLISTS["sqli"]
+        else:
+            list_name, list_url = "passwords", SECLISTS["passwords"]
+
+        self.notify(f"Downloading SecLists/{list_name}...", severity="information")
+
+        try:
+            import httpx as _httpx
+            async with _httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(list_url)
+                if resp.status_code == 200:
+                    lines = [
+                        l.strip() for l in resp.text.splitlines()
+                        if l.strip() and not l.startswith("#")
+                    ][:500]  # Cap at 500 for performance
+                    self.query_one("#payload-list", TextArea).load_text("\n".join(lines))
+                    self.notify(
+                        f"SecLists/{list_name}: {len(lines)} payloads loaded",
+                        severity="information",
+                    )
+                else:
+                    raise Exception(f"HTTP {resp.status_code}")
+        except Exception as e:
+            self.notify(f"Download failed ({e}) — using built-in", severity="warning")
+            self._load_builtin_payloads("general")

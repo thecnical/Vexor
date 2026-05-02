@@ -472,6 +472,94 @@ Output ONLY the Python script, no explanation."""
         except Exception:
             return ""
 
+    async def sync_push(self, target: str, findings: list[dict], stats: dict = {}, workspace: str = "") -> dict:
+        """
+        Feature 13: Push scan findings to Vexor cloud.
+        Returns sync result with scan_id.
+        """
+        if self._offline:
+            return {}
+        await self.ensure_token()
+        if not self._token:
+            return {}
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{API_BASE}/sync/push",
+                    json={
+                        "target": target,
+                        "findings": findings,
+                        "stats": stats,
+                        "workspace": workspace,
+                    },
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                return {}
+        except Exception:
+            return {}
+
+    async def sync_history(self, limit: int = 20) -> list[dict]:
+        """Get cloud scan history"""
+        if self._offline:
+            return []
+        await self.ensure_token()
+        if not self._token:
+            return []
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(
+                    f"{API_BASE}/sync/history?limit={limit}",
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                return []
+        except Exception:
+            return []
+
+    async def team_push_findings(self, project_id: int, findings: list[dict]) -> dict:
+        """
+        Feature 14: Push findings to a team project.
+        """
+        if self._offline:
+            return {}
+        await self.ensure_token()
+        if not self._token:
+            return {}
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{API_BASE}/sync/team/findings",
+                    json={"project_id": project_id, "findings": findings},
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                return {}
+        except Exception:
+            return {}
+
+    async def team_get_findings(self, project_id: int) -> dict:
+        """Get all team findings for a project"""
+        if self._offline:
+            return {}
+        await self.ensure_token()
+        if not self._token:
+            return {}
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(
+                    f"{API_BASE}/sync/team/findings/{project_id}",
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                return {}
+        except Exception:
+            return {}
+
     def _offline_analyze(self, request: str, response: str, vuln: str) -> str:
         """Basic offline analysis"""
         notes = []

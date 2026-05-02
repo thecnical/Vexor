@@ -45,6 +45,7 @@ SCAN_MODULES = [
     ("sensitive_data",   "Sensitive Data"),
     ("auth_bypass",      "Auth Bypass"),
     ("nuclei",           "Nuclei Templates"),  # NEW
+    ("screenshot",       "Screenshot"),         # NEW
 ]
 
 QUICK_MODULES = [
