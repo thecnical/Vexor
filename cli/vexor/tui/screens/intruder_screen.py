@@ -368,7 +368,8 @@ class IntruderScreen(Widget):
             self.notify(f"AI error: {str(e)[:50]}", severity="error")
             self._load_builtin_payloads("general")
 
-    def _load_builtin_payloads(self, payload_type: str) -> None:        builtin = {
+    def _load_builtin_payloads(self, payload_type: str) -> None:
+        builtin = {
             "auth_bypass": [
                 "admin", "administrator", "root", "test", "guest",
                 "' OR '1'='1", "' OR 1=1--", "admin'--",
