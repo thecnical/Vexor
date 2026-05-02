@@ -23,6 +23,7 @@ from vexor.tui.screens.comparer_screen import ComparerScreen
 from vexor.tui.screens.osint_screen import OSINTScreen
 from vexor.tui.screens.config_screen import ConfigScreen
 from vexor.tui.screens.plugins_screen import PluginsScreen
+from vexor.tui.screens.notes_screen import NotesScreen
 from vexor.tui.widgets.header import VexorHeader
 from vexor.tui.widgets.sidebar import VexorSidebar
 from vexor.tui.widgets.status_bar import VexorStatusBar
@@ -195,6 +196,7 @@ SCREEN_MAP = {
     "osint":     ("osint-panel",     OSINTScreen),
     "config":    ("config-panel",    ConfigScreen),
     "plugins":   ("plugins-panel",   PluginsScreen),
+    "notes":     ("notes-panel",     NotesScreen),
 }
 
 
@@ -220,6 +222,7 @@ class VexorApp(App):
         Binding("f10", "show_screen('osint')",     "OSINT"),
         Binding("grave_accent", "show_screen('config')",  "Config",  priority=True),
         Binding("f12", "show_screen('plugins')",   "Plugins", priority=True),
+        Binding("ctrl+n", "show_screen('notes')",  "Notes",   priority=True),
         Binding("ctrl+h", "show_help",             "Help",    priority=True),
         Binding("ctrl+o", "toggle_offline",        "Offline"),
     ]
@@ -248,6 +251,16 @@ class VexorApp(App):
 
     def on_mount(self) -> None:
         self.check_connection()
+        self._init_db()
+
+    @work(exclusive=False)
+    async def _init_db(self) -> None:
+        """Initialize local SQLite database on startup"""
+        try:
+            from vexor.core.db import init_db
+            await init_db()
+        except Exception:
+            pass
 
     @work(exclusive=True)
     async def check_connection(self) -> None:

@@ -236,6 +236,16 @@ if command -v go &>/dev/null; then
         echo -e "${GREEN}    ✓ hakrawler${NC}" || \
         echo -e "${DIM}    - hakrawler (skipped)${NC}"
 
+    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>/dev/null && \
+        echo -e "${GREEN}    ✓ nuclei${NC}" && \
+        nuclei -update-templates -silent 2>/dev/null && \
+        echo -e "${GREEN}    ✓ nuclei templates updated${NC}" || \
+        echo -e "${DIM}    - nuclei (skipped)${NC}"
+
+    go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>/dev/null && \
+        echo -e "${GREEN}    ✓ subfinder${NC}" || \
+        echo -e "${DIM}    - subfinder (skipped)${NC}"
+
     # Add GOPATH/bin to PATH permanently
     if ! grep -q 'GOPATH/bin' "$SHELL_RC" 2>/dev/null; then
         echo 'export PATH="$HOME/go/bin:$PATH"' >> "$SHELL_RC"

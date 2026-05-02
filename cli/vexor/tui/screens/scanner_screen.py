@@ -44,6 +44,7 @@ SCAN_MODULES = [
     ("github_dork",      "GitHub Dorking"),
     ("sensitive_data",   "Sensitive Data"),
     ("auth_bypass",      "Auth Bypass"),
+    ("nuclei",           "Nuclei Templates"),  # NEW
 ]
 
 QUICK_MODULES = [
@@ -340,8 +341,18 @@ class ScannerScreen(Widget):
         progress = self.query_one("#scan-progress", ProgressBar)
 
         from vexor.core.state import state, ScanResult
+        from vexor.core.tool_detector import ToolDetector
+        from vexor.core.db import create_session, save_finding, finish_session
+
         state.scan_target = target
         state.scans_run += 1
+
+        # Create DB session
+        db_session_id = None
+        try:
+            db_session_id = await create_session(target, scan_type)
+        except Exception:
+            pass
 
         self._findings = []
         self.scanning = True
@@ -422,6 +433,12 @@ class ScannerScreen(Widget):
                         param=f.param or "",
                         evidence=f.evidence or "",
                     ))
+                    # Save to local DB
+                    if db_session_id:
+                        try:
+                            await save_finding(db_session_id, f)
+                        except Exception:
+                            pass
 
                 # Reset module indicator
                 try:
@@ -437,6 +454,13 @@ class ScannerScreen(Widget):
 
         total = len(self._findings)
         self._update_stats(total, counts)
+
+        # Finish DB session
+        if db_session_id:
+            try:
+                await finish_session(db_session_id, {**counts, "total": total})
+            except Exception:
+                pass
 
         log.write_line("─" * 55)
         log.write_line(

@@ -14,11 +14,14 @@ class AIClient:
     """
     Vexor AI Client
     Sends requests to backend which handles all AI providers
+    Maintains conversation history for context-aware responses
     """
 
     def __init__(self):
         self._token = self._load_token()
         self._offline = False
+        self._conversation_history: list[dict] = []   # Chat history
+        self._max_history = 20   # Keep last 20 exchanges
 
     def _load_token(self) -> Optional[str]:
         """Load auth token from disk"""
@@ -35,6 +38,126 @@ class AIClient:
         if self._token:
             headers["Authorization"] = f"Bearer {self._token}"
         return headers
+
+    def add_to_history(self, role: str, content: str) -> None:
+        """Add a message to conversation history"""
+        self._conversation_history.append({"role": role, "content": content})
+        # Keep only last N exchanges
+        if len(self._conversation_history) > self._max_history * 2:
+            self._conversation_history = self._conversation_history[-self._max_history * 2:]
+
+    def get_history(self) -> list[dict]:
+        """Get conversation history"""
+        return list(self._conversation_history)
+
+    def clear_history(self) -> None:
+        """Clear conversation history"""
+        self._conversation_history = []
+
+    async def chat(self, message: str) -> str:
+        """
+        Send a chat message with full conversation history context.
+        This is the main method for the AI Panel chat interface.
+        """
+        if self._offline:
+            return "AI offline — connect to backend for chat"
+
+        await self.ensure_token()
+
+        # Add user message to history
+        self.add_to_history("user", message)
+
+        # Build context from history
+        history_context = ""
+        if len(self._conversation_history) > 1:
+            history_lines = []
+            for msg in self._conversation_history[:-1]:  # Exclude current message
+                role = "User" if msg["role"] == "user" else "Vexor AI"
+                history_lines.append(f"{role}: {msg['content'][:200]}")
+            history_context = "\n".join(history_lines[-10:])  # Last 10 messages
+
+        # Build prompt with history
+        if history_context:
+            prompt = (
+                f"Previous conversation:\n{history_context}\n\n"
+                f"User: {message}"
+            )
+        else:
+            prompt = message
+
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.post(
+                    f"{API_BASE}/ai/analyze",
+                    json={
+                        "request": prompt,
+                        "response": "",
+                        "vulnerability": "",
+                    },
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    result = resp.json().get("result", "")
+                    # Add AI response to history
+                    self.add_to_history("assistant", result)
+                    return result
+                return "AI request failed — try again"
+        except Exception as e:
+            return f"AI error: {str(e)[:100]}"
+
+    async def generate_poc(self, finding: dict) -> str:
+        """
+        Feature 15: AI-Generated PoC exploit script.
+        Takes a finding dict and generates a working Python PoC.
+        """
+        if self._offline:
+            return "AI offline — cannot generate PoC"
+
+        await self.ensure_token()
+
+        vuln     = finding.get("vuln", "")
+        endpoint = finding.get("endpoint", "")
+        param    = finding.get("param", "")
+        payload  = finding.get("payload", "")
+        evidence = finding.get("evidence", "")
+        severity = finding.get("severity", "")
+
+        prompt = f"""You are an expert penetration tester. Generate a working Python proof-of-concept exploit script for this vulnerability.
+
+VULNERABILITY: {vuln}
+SEVERITY: {severity}
+ENDPOINT: {endpoint}
+PARAMETER: {param}
+PAYLOAD USED: {payload}
+EVIDENCE: {evidence[:300]}
+
+Requirements:
+1. Write a complete, runnable Python script
+2. Use only standard library + requests/httpx (no exotic deps)
+3. Include clear comments explaining each step
+4. Add a disclaimer at the top: "# For authorized testing only"
+5. The script should:
+   - Set up the target URL
+   - Send the exploit payload
+   - Verify the vulnerability is present
+   - Print clear output showing success/failure
+6. Keep it under 80 lines
+7. Make it actually work — no placeholder code
+
+Output ONLY the Python script, no explanation."""
+
+        try:
+            async with httpx.AsyncClient(timeout=90) as client:
+                resp = await client.post(
+                    f"{API_BASE}/ai/analyze",
+                    json={"request": prompt, "response": "", "vulnerability": vuln},
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("result", "")
+                return "PoC generation failed"
+        except Exception as e:
+            return f"Error: {str(e)[:100]}"
 
     async def health_check(self) -> bool:
         """Check if backend is reachable"""
