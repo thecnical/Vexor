@@ -68,7 +68,7 @@ class ScannerScreen(Widget):
     ScannerScreen {
         background: #0a0a0f;
         overflow-y: auto;
-        height: 100%;
+        height: auto;
     }
 
     /* ── Controls ── */

@@ -26,7 +26,7 @@ class OSINTScreen(Widget):
     DEFAULT_CSS = """
     OSINTScreen {
         background: #0a0a0f;
-        height: 100%;
+        height: auto;
         overflow-y: auto;
     }
 

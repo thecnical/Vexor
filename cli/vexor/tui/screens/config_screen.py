@@ -14,7 +14,7 @@ class ConfigScreen(Widget):
     DEFAULT_CSS = """
     ConfigScreen {
         background: #0a0a0f;
-        height: 100%;
+        height: auto;
         overflow-y: auto;
         padding: 1 2;
     }

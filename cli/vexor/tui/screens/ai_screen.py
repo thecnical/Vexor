@@ -44,6 +44,7 @@ class AIScreen(Widget):
         background: #0a0a0f;
         padding: 0 1;
         overflow-y: auto;
+        height: auto;
     }
     .ai-title {
         height: 2;
@@ -68,7 +69,7 @@ class AIScreen(Widget):
         border: solid #00ffff;
         padding: 1;
         margin-bottom: 1;
-        height: 12;
+        height: auto;
     }
     .input-textarea {
         height: 8;
@@ -77,7 +78,7 @@ class AIScreen(Widget):
         border: solid #ff00ff;
         padding: 1;
         margin-bottom: 1;
-        height: 18;
+        height: auto;
     }
     .output-scroll {
         height: 14;
@@ -85,7 +86,8 @@ class AIScreen(Widget):
     .history-section {
         border: solid #1a1a2e;
         padding: 1;
-        height: 14;
+        height: auto;
+        margin-bottom: 1;
     }
     .history-scroll {
         height: 10;

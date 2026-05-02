@@ -69,19 +69,22 @@ VexorSidebar {
 #main-content {
     background: #0a0a0f;
     padding: 0;
+    height: 1fr;
+    overflow: hidden;
 }
 
 /* Hide all screens by default */
 .screen-panel {
     display: none;
     padding: 0 1;
-    overflow-y: scroll;
-    height: 100%;
+    overflow-y: auto;
+    height: 1fr;
 }
 
 /* Show active screen */
 .screen-panel.active {
     display: block;
+    height: 1fr;
 }
 
 VexorStatusBar {

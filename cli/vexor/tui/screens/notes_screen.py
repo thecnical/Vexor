@@ -15,7 +15,7 @@ class NotesScreen(Widget):
     DEFAULT_CSS = """
     NotesScreen {
         background: #0a0a0f;
-        height: 100%;
+        height: auto;
         overflow-y: auto;
         padding: 0 1;
     }
@@ -26,18 +26,18 @@ class NotesScreen(Widget):
         margin-bottom: 1;
     }
     .notes-layout {
-        height: 100%;
+        height: auto;
     }
     .notes-list-panel {
         width: 35%;
         border-right: solid #1a1a2e;
         padding: 0 1 0 0;
-        height: 100%;
+        height: auto;
     }
     .notes-edit-panel {
         width: 65%;
         padding: 0 0 0 1;
-        height: 100%;
+        height: auto;
     }
     .panel-label {
         height: 2;
