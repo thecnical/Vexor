@@ -9,114 +9,115 @@
   ╚═══╝  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝
 ```
 
-**AI-Powered CLI Security Toolkit**
+# Vexor — AI-Powered CLI Security Toolkit
+
+**The Free, Open-Source Alternative to Burp Suite Pro**
 
 *Penetrate. Analyze. Dominate.*
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat-square&logo=python)](https://python.org)
-[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL-orange?style=flat-square&logo=linux)](https://github.com/thecnical/Vexor)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Kali%20%7C%20WSL-orange?style=flat-square&logo=linux)](https://github.com/thecnical/Vexor)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.0.0-cyan?style=flat-square)](https://github.com/thecnical/Vexor/releases)
+[![Version](https://img.shields.io/badge/Version-4.0.0-cyan?style=flat-square)](https://github.com/thecnical/Vexor/releases)
+[![CI](https://github.com/thecnical/Vexor/actions/workflows/ci.yml/badge.svg)](https://github.com/thecnical/Vexor/actions)
 [![Author](https://img.shields.io/badge/Author-Chandan%20Pandey-magenta?style=flat-square)](https://github.com/thecnical)
 
-> Created by **[Chandan Pandey (Technical)](https://github.com/thecnical)**
+> **Vexor** is a free, AI-powered CLI security toolkit for penetration testers, bug bounty hunters, and red teamers.  
+> Built for Kali Linux. Runs in your terminal. No Java. No $475/year license.
 
 </div>
 
 ---
 
-## What is Vexor?
+## Why Vexor?
 
-Vexor is a free, AI-powered CLI security toolkit that beats Burp Suite Pro in features while being completely free. It runs entirely in your terminal with a beautiful TUI — no GUI needed, no Java, no $475/year license.
-
-**Vexor vs Burp Suite Pro:**
-
-| Feature | Burp Community | Burp Pro ($475/yr) | Vexor (Free) |
-|---------|---------------|---------------------|--------------|
-| Automated Scanner | ❌ | ✅ | ✅ |
-| AI Analysis | ❌ | ✅ Limited | ✅ Unlimited |
-| Project Save/Load | ❌ | ✅ | ✅ |
-| Intruder (unlimited) | ❌ Throttled | ✅ | ✅ |
-| PDF Reports | ❌ | ✅ | ✅ |
-| CLI Native | ❌ Java GUI | ❌ Java GUI | ✅ |
-| Port Scanner | ❌ | ❌ | ✅ |
-| Subdomain Enum | ❌ | ❌ | ✅ |
-| GitHub Dorking | ❌ | ❌ | ✅ |
-| Wayback Machine | ❌ | ❌ | ✅ |
-| Multi AI Providers | ❌ | ❌ | ✅ |
-| Price | Free | $475/year | **Free** |
+| Feature | Burp Community | Burp Pro ($475/yr) | **Vexor v4 (Free)** |
+|---------|:-:|:-:|:-:|
+| Automated Vulnerability Scanner | ❌ | ✅ | ✅ |
+| AI Analysis & Payloads | ❌ | ❌ | ✅ Unlimited |
+| OSINT Intelligence Engine | ❌ | ❌ | ✅ 6-Phase |
+| Nuclei Template Scanning | ❌ | ❌ | ✅ |
+| Subdomain Takeover Detection | ❌ | ❌ | ✅ |
+| CVE + ExploitDB Mapping | ❌ | ❌ | ✅ |
+| AI-Generated PoC Exploits | ❌ | ❌ | ✅ |
+| Blind XSS/SSRF Callback Server | ❌ | ✅ (Collaborator) | ✅ Built-in |
+| Cloud Sync + Team Collaboration | ❌ | ❌ | ✅ |
+| Scan Session Persistence | ❌ | ✅ | ✅ SQLite |
+| Intruder (unlimited speed) | ❌ Throttled | ✅ | ✅ 50 parallel |
+| SecLists Integration | ❌ | ❌ | ✅ Auto-download |
+| CLI Native (no Java/GUI) | ❌ | ❌ | ✅ |
+| **Price** | Free | **$475/year** | **Free Forever** |
 
 ---
 
 ## Features
 
-### 26 Security Modules
-
-| Module | Description | Severity |
-|--------|-------------|----------|
-| `sqli` | SQL Injection (Error + Time-based + Blind) | CRITICAL |
-| `xss` | XSS (Reflected + Stored + DOM) | HIGH |
-| `csrf` | CSRF (Forms + SameSite + Origin) | HIGH |
-| `idor` | Insecure Direct Object Reference | HIGH |
-| `ssrf` | Server-Side Request Forgery | CRITICAL |
-| `xxe` | XML External Entity Injection | CRITICAL |
-| `lfi` | Local/Remote File Inclusion | CRITICAL |
-| `jwt_analyzer` | JWT Token Analysis & Attacks | CRITICAL |
-| `ssl_analyzer` | SSL/TLS Deep Analysis (pyOpenSSL) | HIGH |
-| `headers` | Security Headers Check (7+ headers) | MEDIUM |
-| `cors` | CORS Misconfiguration | HIGH |
-| `websocket` | WebSocket Security Testing | HIGH |
-| `api_tester` | REST/GraphQL API Testing | HIGH |
-| `port_scanner` | TCP Port Scanner (nmap + socket) | HIGH |
-| `rate_limit` | Rate Limiting Detection | HIGH |
-| `open_redirect` | Open Redirect Finder | MEDIUM |
-| `file_upload` | File Upload Bypass Testing | CRITICAL |
-| `session_analyzer` | Session/Cookie Security | HIGH |
-| `fingerprinter` | Technology Stack Detection | INFO |
-| `subdomain` | Subdomain Enumeration (100+ wordlist) | INFO |
-| `dirbuster` | Directory/File Discovery (50+ paths) | HIGH |
-| `cve_lookup` | CVE Lookup via NVD API | CRITICAL |
-| `wayback` | Historical Endpoint Discovery | HIGH |
-| `github_dork` | GitHub Secret Dorking | CRITICAL |
-| `sensitive_data` | Sensitive Data Exposure (20+ patterns) | CRITICAL |
-| `auth_bypass` | Authentication Bypass | CRITICAL |
-
-### AI Features (Free — No API Key Needed)
-
-AI runs on backend with automatic fallback chain:
+### 🔍 28 Security Modules
 
 ```
-Groq (fastest) → NVIDIA NIM → OpenRouter → HuggingFace
+sqli · xss · csrf · idor · ssrf · xxe · lfi · jwt_analyzer
+ssl_analyzer · headers · cors · websocket · api_tester
+port_scanner · rate_limit · open_redirect · file_upload
+session_analyzer · fingerprinter · subdomain · dirbuster
+cve_lookup · wayback · github_dork · sensitive_data
+auth_bypass · nuclei · screenshot
 ```
 
-- **Analyze** — Deep vulnerability analysis
-- **Explain** — Explain any HTTP request/response
-- **Suggest** — Next attack step suggestions  
-- **Payload** — AI-generated smart payloads
-- **Filter** — False positive removal
-- **Report** — Professional report writing
+### 🧠 Vexor Intelligence Engine (OSINT v4)
 
-### World-Class Tools Integrated
+6-phase automated OSINT pipeline — just provide a target:
 
-| Tool | Purpose |
-|------|---------|
-| **mitmproxy** | HTTP/HTTPS proxy interceptor |
-| **Scapy** | Packet crafting & network analysis |
-| **pyOpenSSL** | Deep SSL certificate analysis |
-| **python-nmap** | Port scanning via nmap |
-| **Playwright** | JS-heavy site scanning |
-| **Textual** | Beautiful terminal UI |
+```
+Phase 1 → Discovery      DNS · CT Logs · WHOIS · ASN/BGP · Passive Subs
+Phase 2 → Live Check     Async httpx check on all discovered hosts
+Phase 3 → Deep Recon     Ports · SSL · Tech · Wayback · Hakrawler crawl
+Phase 4 → Secrets        Gf patterns: API keys · JWT · SQLi · SSRF params
+Phase 5 → Threat Intel   Shodan · VirusTotal · OTX · URLScan · Chaos DB
+Phase 6 → AI Correlation Attack chains · Threat profiling · PoC generation
+```
+
+### 🤖 AI Features (No API Key Required)
+
+Multi-provider AI with automatic fallback:
+```
+Groq → NVIDIA NIM → OpenRouter → HuggingFace
+```
+
+- **Analyze** — Deep vulnerability analysis with exploitation paths
+- **Auto Exploit** — Full attack chain generation
+- **PoC Generator** — Working Python exploit scripts
+- **Risk Score** — CVSS v3.1 scoring
+- **Payload Gen** — Context-aware smart payloads
+- **False Positive Filter** — AI-powered result validation
+- **Report Writer** — Professional pentest reports
+- **Translate** — Reports in 10 languages
+- **Chat History** — Context-aware conversation
+
+### 🛡️ Advanced Capabilities
+
+- **Nuclei Integration** — 50,000+ community templates (CVE, misconfig, exposure)
+- **CVE + ExploitDB** — Auto-maps CVEs to public exploits + GitHub PoCs
+- **Subdomain Takeover** — Detects dangling CNAMEs (27 cloud services)
+- **Blind XSS/SSRF** — Built-in OOB callback server (no Burp Collaborator needed)
+- **Scope Management** — `~/.vexor/scope.txt` with wildcard + CIDR support
+- **Workspace System** — Per-target project isolation
+- **Notes Panel** — Persistent pentest notes (SQLite)
+- **Cloud Sync** — Push findings to web dashboard
+- **Team Collaboration** — Multi-user shared projects
+- **SecLists** — Auto-downloads community wordlists for Intruder
+- **Screenshot Module** — Visual recon via Playwright
 
 ---
 
 ## Installation
 
-### Requirements
-- Linux or WSL (Windows Subsystem for Linux)
-- Python 3.11+
-- nmap (system package)
+### One-Line Install (Kali Linux / Debian)
 
-### Quick Install
+```bash
+git clone https://github.com/thecnical/Vexor && cd Vexor && ./install.sh
+```
+
+### Manual Install
 
 ```bash
 git clone https://github.com/thecnical/Vexor
@@ -125,74 +126,75 @@ chmod +x install.sh
 ./install.sh
 ```
 
-### WSL Setup (Windows Users)
+### Update
+
+```bash
+cd ~/Vexor && git pull && ./install.sh
+# or inside Vexor:
+vexor update
+```
+
+### WSL / Windows
 
 ```powershell
-# In PowerShell (Admin)
+# PowerShell (Admin)
 wsl --install -d kali-linux
 ```
-
-Then in Kali/WSL:
+Then in Kali:
 ```bash
-sudo apt update && sudo apt upgrade -y
-git clone https://github.com/thecnical/Vexor
-cd Vexor && ./install.sh
+git clone https://github.com/thecnical/Vexor && cd Vexor && ./install.sh
 ```
 
-### Verify Installation
+### Optional: Go Tools (for full OSINT power)
 
 ```bash
-python check_deps.py
-vexor --version
+# Install Go first: https://go.dev/dl/
+go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install github.com/tomnomnom/assetfinder@latest
+go install github.com/hakluke/hakrawler@latest
 ```
 
 ---
 
 ## Usage
 
-### Launch TUI (Recommended)
+### Launch TUI
 
 ```bash
 vexor
 ```
 
-Beautiful terminal dashboard with:
-- F1 Dashboard | F2 Proxy | F3 Scanner | F4 Intruder
-- F5 Repeater | F6 AI Panel | F7 Reports
-- Ctrl+H Help | Ctrl+O Offline Mode | Ctrl+Q Quit
+| Key | Screen |
+|-----|--------|
+| F1 | Dashboard |
+| F2 | Proxy Interceptor |
+| F3 | Scanner (28 modules) |
+| F4 | Intruder |
+| F5 | Repeater |
+| F6 | AI Panel |
+| F7 | Reports |
+| F8 | Decoder |
+| F9 | Comparer |
+| F10 | OSINT Intelligence |
+| `` ` `` | Config & Login |
+| F12 | Plugins |
+| Ctrl+N | Notes |
+| Ctrl+H | Help |
+| Ctrl+Q | Quit |
 
 ### CLI Commands
 
 ```bash
-# Quick scan (5 modules)
-vexor scan https://target.com
-
-# Full scan (26 modules)
-vexor scan https://target.com --full
-
-# Single module
-vexor scan https://target.com --module sqli
-vexor scan https://target.com --module xss
-
-# Save report
-vexor scan https://target.com --full --output report.html
-vexor scan https://target.com --full --format pdf
-
-# Start proxy
-vexor proxy
-vexor proxy --port 9090
-
-# Auth
-vexor auth login
-vexor auth status
-vexor auth logout
-
-# Offline mode (no AI)
-vexor --offline
-vexor scan https://target.com --offline
-
-# Version
-vexor --version
+vexor                              # Launch TUI
+vexor scan https://target.com      # Quick scan (7 modules)
+vexor scan https://target.com --full   # Full scan (28 modules)
+vexor scan https://target.com --module nuclei  # Nuclei only
+vexor scan https://target.com --full --format pdf  # PDF report
+vexor proxy                        # Start HTTP/HTTPS proxy
+vexor auth login                   # Login for AI features
+vexor update                       # Update to latest
+vexor --offline                    # Offline mode
+vexor --version                    # Show version
 ```
 
 ---
@@ -200,62 +202,66 @@ vexor --version
 ## Project Structure
 
 ```
-vexor/
-├── cli/                    ← User tool (pip install)
-│   └── vexor/
-│       ├── modules/        ← 26 scan modules
-│       ├── tui/            ← Terminal UI
-│       ├── core/           ← Proxy, decoder, session
-│       ├── ai/             ← AI client
-│       ├── reports/        ← HTML/PDF reports
-│       ├── payloads/       ← Built-in payload lists
-│       └── plugins/        ← Plugin system
+Vexor/
+├── cli/vexor/
+│   ├── modules/        ← 28 scan modules (sqli, xss, nuclei, ...)
+│   ├── tui/screens/    ← 13 TUI screens
+│   ├── core/           ← db, proxy, scope, workspace, callback_server
+│   ├── ai/             ← AI client (chat, PoC, analysis)
+│   ├── reports/        ← HTML/PDF report templates
+│   ├── payloads/       ← Built-in payload lists
+│   └── plugins/        ← Plugin system
 │
-├── backend/                ← API server (Render deploy)
-│   └── app/
-│       ├── ai/             ← AI orchestrator + providers
-│       ├── auth/           ← JWT authentication
-│       └── api/            ← REST endpoints
+├── backend/app/
+│   ├── ai/             ← Multi-provider AI orchestrator
+│   ├── auth/           ← JWT authentication
+│   └── api/            ← osint · scan · sync (cloud/team)
 │
-├── install.sh              ← One-click installer
-├── check_deps.py           ← Dependency checker
+├── install.sh          ← One-click installer
 └── README.md
 ```
 
 ---
 
-## Backend Deploy (Render)
+## Backend (Self-Host or Use Ours)
+
+Our backend is deployed at Render. To self-host:
 
 ```bash
-# 1. Fork this repo
-# 2. Connect to Render
-# 3. Set environment variables:
-GROQ_API_KEY=your_key
-NVIDIA_API_KEY=your_key
-OPENROUTER_API_KEY=your_key
-HUGGINGFACE_API_KEY=your_key
-SECRET_KEY=your_random_secret
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
-# 4. Deploy backend/ directory
-# 5. Update VEXOR_BACKEND_URL in cli/vexor/config.py
+Environment variables needed:
+```env
+SECRET_KEY=your-secret
+GROQ_API_KEY=...
+NVIDIA_API_KEY=...
+OPENROUTER_API_KEY=...
+HUGGINGFACE_API_KEY=...
+SHODAN_API_KEY=...
+VIRUSTOTAL_API_KEY=...
+OTX_API_KEY=...
+URLSCAN_API_KEY=...
+CHAOS_API_KEY=...
 ```
 
 ---
 
 ## Legal Disclaimer
 
-> **Vexor is for authorized security testing ONLY.**
+> **For authorized security testing ONLY.**
 >
-> Use of this tool against systems you do not own or have explicit written
-> permission to test is **ILLEGAL** and may result in criminal prosecution.
->
+> Using Vexor against systems you do not own or have explicit written permission
+> to test is **illegal** and may result in criminal prosecution.
 > The author assumes no liability for misuse.
 
 ---
 
-## License
+## Contributing
 
-MIT License — See [LICENSE](LICENSE)
+PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -263,6 +269,8 @@ MIT License — See [LICENSE](LICENSE)
 
 Made with ❤️ by **[Chandan Pandey (Technical)](https://github.com/thecnical)**
 
-*If Vexor helped you, give it a ⭐ on [GitHub](https://github.com/thecnical/Vexor)*
+⭐ **Star this repo** if Vexor helped you — it helps others find it!
+
+*Keywords: penetration testing · bug bounty · OSINT · vulnerability scanner · Burp Suite alternative · Kali Linux · CLI security tool · AI pentest · red team · CTF*
 
 </div>
