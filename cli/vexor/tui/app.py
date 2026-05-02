@@ -32,18 +32,30 @@ from vexor.tui.widgets.status_bar import VexorStatusBar
 VEXOR_CSS = """
 Screen {
     background: #0a0a0f;
+    layers: base;
 }
 
 VexorHeader {
     height: 4;
     background: #0d0d1a;
     border-bottom: solid #00ffff;
+    dock: top;
+}
+
+VexorStatusBar {
+    height: 1;
+    background: #0d0d1a;
+    border-top: solid #1a1a2e;
+    color: #888888;
+    dock: bottom;
 }
 
 VexorSidebar {
     width: 24;
     background: #0d0d1a;
     border-right: solid #1a1a2e;
+    dock: left;
+    height: 1fr;
 }
 
 .sidebar-item {
@@ -85,13 +97,6 @@ VexorSidebar {
 .screen-panel.active {
     display: block;
     height: 1fr;
-}
-
-VexorStatusBar {
-    height: 1;
-    background: #0d0d1a;
-    border-top: solid #1a1a2e;
-    color: #888888;
 }
 
 Button {
@@ -238,19 +243,18 @@ class VexorApp(App):
 
     def compose(self) -> ComposeResult:
         yield VexorHeader()
-        with Horizontal():
-            yield VexorSidebar()
-            with Container(id="main-content"):
-                # All screens mounted at once — hidden/shown via CSS
-                for name, (panel_id, screen_class) in SCREEN_MAP.items():
-                    active = "active" if name == "dashboard" else ""
-                    widget = screen_class()
-                    widget.add_class("screen-panel")
-                    if active:
-                        widget.add_class("active")
-                    widget.id = panel_id
-                    yield widget
         yield VexorStatusBar()
+        yield VexorSidebar()
+        with Container(id="main-content"):
+            # All screens mounted at once — hidden/shown via CSS
+            for name, (panel_id, screen_class) in SCREEN_MAP.items():
+                active = "active" if name == "dashboard" else ""
+                widget = screen_class()
+                widget.add_class("screen-panel")
+                if active:
+                    widget.add_class("active")
+                widget.id = panel_id
+                yield widget
 
     def on_mount(self) -> None:
         self.check_connection()
