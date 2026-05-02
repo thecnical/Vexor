@@ -85,17 +85,10 @@ VexorSidebar {
     overflow: hidden;
 }
 
-/* Hide all screens by default */
+/* Screen panels — shown/hidden via widget.display in Python */
 .screen-panel {
-    display: none;
     padding: 0 1;
     overflow-y: auto;
-    height: 1fr;
-}
-
-/* Show active screen */
-.screen-panel.active {
-    display: block;
     height: 1fr;
 }
 
@@ -246,14 +239,13 @@ class VexorApp(App):
         yield VexorStatusBar()
         yield VexorSidebar()
         with Container(id="main-content"):
-            # All screens mounted at once — hidden/shown via CSS
             for name, (panel_id, screen_class) in SCREEN_MAP.items():
-                active = "active" if name == "dashboard" else ""
                 widget = screen_class()
                 widget.add_class("screen-panel")
-                if active:
-                    widget.add_class("active")
                 widget.id = panel_id
+                # Only dashboard visible at start
+                if name != "dashboard":
+                    widget.display = False
                 yield widget
 
     def on_mount(self) -> None:
@@ -284,10 +276,11 @@ class VexorApp(App):
         if name not in SCREEN_MAP:
             return
 
-        # Hide all screens
+        # Hide all screens by setting display to none
         for n, (panel_id, _) in SCREEN_MAP.items():
             try:
                 panel = self.query_one(f"#{panel_id}")
+                panel.display = False
                 panel.remove_class("active")
             except Exception:
                 pass
@@ -296,6 +289,7 @@ class VexorApp(App):
         panel_id = SCREEN_MAP[name][0]
         try:
             panel = self.query_one(f"#{panel_id}")
+            panel.display = True
             panel.add_class("active")
         except Exception:
             pass
