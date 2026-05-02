@@ -4,8 +4,8 @@ Persistent screens — state survives navigation
 """
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.widgets import Static, Markdown
-from textual.containers import Container, Horizontal, ScrollableContainer
+from textual.widgets import Static, Markdown, ContentSwitcher
+from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
 from textual.screen import Screen
 from textual import work
 import asyncio
@@ -32,14 +32,12 @@ from vexor.tui.widgets.status_bar import VexorStatusBar
 VEXOR_CSS = """
 Screen {
     background: #0a0a0f;
-    layers: base;
 }
 
 VexorHeader {
-    height: 4;
+    height: 3;
     background: #0d0d1a;
     border-bottom: solid #00ffff;
-    dock: top;
 }
 
 VexorStatusBar {
@@ -47,15 +45,18 @@ VexorStatusBar {
     background: #0d0d1a;
     border-top: solid #1a1a2e;
     color: #888888;
-    dock: bottom;
+}
+
+#body-row {
+    height: 1fr;
 }
 
 VexorSidebar {
-    width: 24;
+    width: 22;
     background: #0d0d1a;
     border-right: solid #1a1a2e;
-    dock: left;
     height: 1fr;
+    overflow-y: auto;
 }
 
 .sidebar-item {
@@ -78,18 +79,20 @@ VexorSidebar {
     height: 2;
 }
 
-#main-content {
-    background: #0a0a0f;
-    padding: 0;
+ContentSwitcher {
     height: 1fr;
-    overflow: hidden;
+    width: 1fr;
+    background: #0a0a0f;
 }
 
-/* Screen panels — shown/hidden via widget.display in Python */
-.screen-panel {
-    padding: 0 1;
-    overflow-y: auto;
+/* Each screen inside ContentSwitcher */
+DashboardScreen, ProxyScreen, ScannerScreen, IntruderScreen,
+RepeaterScreen, AIScreen, ReportsScreen, DecoderScreen,
+ComparerScreen, OSINTScreen, ConfigScreen, PluginsScreen, NotesScreen {
     height: 1fr;
+    overflow-y: auto;
+    padding: 0 1;
+    background: #0a0a0f;
 }
 
 Button {
@@ -174,35 +177,31 @@ Select {
 .low { color: #00aaff; }
 .info { color: #888888; }
 
-.section-title {
-    color: #ff00ff;
-    text-style: bold;
-    height: 2;
-}
+.section-title { color: #ff00ff; text-style: bold; height: 2; }
 .panel-cyan { border: solid #00ffff; padding: 1; }
 .panel-magenta { border: solid #ff00ff; padding: 1; }
 .panel-dim { border: solid #1a1a2e; padding: 1; }
 """
 
 SCREEN_MAP = {
-    "dashboard": ("dashboard-panel", DashboardScreen),
-    "proxy":     ("proxy-panel",     ProxyScreen),
-    "scanner":   ("scanner-panel",   ScannerScreen),
-    "intruder":  ("intruder-panel",  IntruderScreen),
-    "repeater":  ("repeater-panel",  RepeaterScreen),
-    "ai":        ("ai-panel",        AIScreen),
-    "reports":   ("reports-panel",   ReportsScreen),
-    "decoder":   ("decoder-panel",   DecoderScreen),
-    "comparer":  ("comparer-panel",  ComparerScreen),
-    "osint":     ("osint-panel",     OSINTScreen),
-    "config":    ("config-panel",    ConfigScreen),
-    "plugins":   ("plugins-panel",   PluginsScreen),
-    "notes":     ("notes-panel",     NotesScreen),
+    "dashboard": ("dashboard", DashboardScreen),
+    "proxy":     ("proxy",     ProxyScreen),
+    "scanner":   ("scanner",   ScannerScreen),
+    "intruder":  ("intruder",  IntruderScreen),
+    "repeater":  ("repeater",  RepeaterScreen),
+    "ai":        ("ai",        AIScreen),
+    "reports":   ("reports",   ReportsScreen),
+    "decoder":   ("decoder",   DecoderScreen),
+    "comparer":  ("comparer",  ComparerScreen),
+    "osint":     ("osint",     OSINTScreen),
+    "config":    ("config",    ConfigScreen),
+    "plugins":   ("plugins",   PluginsScreen),
+    "notes":     ("notes",     NotesScreen),
 }
 
 
 class VexorApp(App):
-    """Main Vexor TUI — Persistent screens, state preserved"""
+    """Main Vexor TUI — ContentSwitcher for reliable screen switching"""
 
     CSS = VEXOR_CSS
     TITLE = f"VEXOR v{TOOL_VERSION}"
@@ -236,17 +235,14 @@ class VexorApp(App):
 
     def compose(self) -> ComposeResult:
         yield VexorHeader()
+        with Horizontal(id="body-row"):
+            yield VexorSidebar()
+            with ContentSwitcher(initial="dashboard", id="switcher"):
+                for name, (panel_id, screen_class) in SCREEN_MAP.items():
+                    widget = screen_class()
+                    widget.id = panel_id
+                    yield widget
         yield VexorStatusBar()
-        yield VexorSidebar()
-        with Container(id="main-content"):
-            for name, (panel_id, screen_class) in SCREEN_MAP.items():
-                widget = screen_class()
-                widget.add_class("screen-panel")
-                widget.id = panel_id
-                # Only dashboard visible at start
-                if name != "dashboard":
-                    widget.display = False
-                yield widget
 
     def on_mount(self) -> None:
         self.check_connection()
@@ -254,7 +250,6 @@ class VexorApp(App):
 
     @work(exclusive=False)
     async def _init_db(self) -> None:
-        """Initialize local SQLite database on startup"""
         try:
             from vexor.core.db import init_db
             await init_db()
@@ -272,37 +267,22 @@ class VexorApp(App):
             pass
 
     def action_show_screen(self, name: str) -> None:
-        """Switch to a screen without destroying it"""
+        """Switch screen using ContentSwitcher"""
         if name not in SCREEN_MAP:
             return
-
-        # Hide all screens by setting display to none
-        for n, (panel_id, _) in SCREEN_MAP.items():
-            try:
-                panel = self.query_one(f"#{panel_id}")
-                panel.display = False
-                panel.remove_class("active")
-            except Exception:
-                pass
-
-        # Show target screen
-        panel_id = SCREEN_MAP[name][0]
         try:
-            panel = self.query_one(f"#{panel_id}")
-            panel.display = True
-            panel.add_class("active")
+            self.query_one("#switcher", ContentSwitcher).current = name
+            self.current_screen = name
         except Exception:
             pass
 
-        self.current_screen = name
-
-        # Update sidebar
+        # Update sidebar highlight
         try:
             self.query_one(VexorSidebar).set_active(name)
         except Exception:
             pass
 
-        # Update status bar target
+        # Update status bar
         try:
             from vexor.core.state import state
             self.query_one(VexorStatusBar).update_target(state.scan_target)
@@ -320,8 +300,6 @@ class VexorApp(App):
         except Exception:
             pass
         self.notify(f"Mode: {mode}", severity="warning" if self.is_offline else "information")
-
-        # Update state
         from vexor.core.state import state
         state.is_offline = self.is_offline
 
