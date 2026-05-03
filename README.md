@@ -121,7 +121,24 @@
 
 ---
 
-## Installation
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [📦 Installation](docs/01-installation.md) | Install on Kali, WSL, Ubuntu |
+| [🚀 Quick Start](docs/02-quick-start.md) | First scan in 5 minutes |
+| [🔍 Scanner Guide](docs/03-scanner.md) | All 28 modules with examples |
+| [🕵️ OSINT Guide](docs/04-osint.md) | 6-phase intelligence pipeline |
+| [🌐 Proxy Guide](docs/05-proxy.md) | HTTP/HTTPS interception |
+| [⚔ Intruder & Repeater](docs/06-intruder-repeater.md) | Fuzzing and manual testing |
+| [🤖 AI Panel Guide](docs/07-ai-panel.md) | All 11 AI actions |
+| [📄 Reports & Notes](docs/08-reports-notes.md) | Generate reports, take notes |
+| [⚙️ Config & Auth](docs/09-config-auth.md) | Login, settings, plugins |
+| [📖 CLI Reference](docs/10-cli-reference.md) | All commands and options |
+
+---
+
+
 
 ### One-Line Install (Kali Linux / Debian / Ubuntu)
 
