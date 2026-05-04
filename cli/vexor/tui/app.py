@@ -24,6 +24,8 @@ from vexor.tui.screens.osint_screen import OSINTScreen
 from vexor.tui.screens.config_screen import ConfigScreen
 from vexor.tui.screens.plugins_screen import PluginsScreen
 from vexor.tui.screens.notes_screen import NotesScreen
+from vexor.tui.screens.spider_screen import SpiderScreen
+from vexor.tui.screens.history_screen import HistoryScreen
 from vexor.tui.widgets.header import VexorHeader
 from vexor.tui.widgets.sidebar import VexorSidebar
 from vexor.tui.widgets.status_bar import VexorStatusBar
@@ -88,7 +90,8 @@ ContentSwitcher {
 /* Each screen inside ContentSwitcher */
 DashboardScreen, ProxyScreen, ScannerScreen, IntruderScreen,
 RepeaterScreen, AIScreen, ReportsScreen, DecoderScreen,
-ComparerScreen, OSINTScreen, ConfigScreen, PluginsScreen, NotesScreen {
+ComparerScreen, OSINTScreen, ConfigScreen, PluginsScreen, NotesScreen,
+SpiderScreen, HistoryScreen {
     height: 1fr;
     overflow-y: auto;
     padding: 0 1;
@@ -197,6 +200,8 @@ SCREEN_MAP = {
     "config":    ("config",    ConfigScreen),
     "plugins":   ("plugins",   PluginsScreen),
     "notes":     ("notes",     NotesScreen),
+    "spider":    ("spider",    SpiderScreen),
+    "history":   ("history",   HistoryScreen),
 }
 
 
@@ -208,23 +213,25 @@ class VexorApp(App):
     SUB_TITLE = TOOL_TAGLINE
 
     BINDINGS = [
-        Binding("ctrl+q", "quit",                  "Quit",    priority=True),
-        Binding("escape", "quit",                  "Quit",    priority=True),
-        Binding("f1",  "show_screen('dashboard')", "Dashboard"),
-        Binding("f2",  "show_screen('proxy')",     "Proxy"),
-        Binding("f3",  "show_screen('scanner')",   "Scanner"),
-        Binding("f4",  "show_screen('intruder')",  "Intruder"),
-        Binding("f5",  "show_screen('repeater')",  "Repeater"),
-        Binding("f6",  "show_screen('ai')",        "AI Panel"),
-        Binding("f7",  "show_screen('reports')",   "Reports"),
-        Binding("f8",  "show_screen('decoder')",   "Decoder"),
-        Binding("f9",  "show_screen('comparer')",  "Comparer"),
-        Binding("f10", "show_screen('osint')",     "OSINT"),
-        Binding("grave_accent", "show_screen('config')",  "Config",  priority=True),
-        Binding("f12", "show_screen('plugins')",   "Plugins", priority=True),
-        Binding("ctrl+n", "show_screen('notes')",  "Notes",   priority=True),
-        Binding("ctrl+h", "show_help",             "Help",    priority=True),
-        Binding("ctrl+o", "toggle_offline",        "Offline"),
+        Binding("ctrl+q", "quit",                   "Quit",    priority=True),
+        Binding("escape", "quit",                   "Quit",    priority=True),
+        Binding("f1",  "show_screen('dashboard')",  "Dashboard"),
+        Binding("f2",  "show_screen('proxy')",      "Proxy"),
+        Binding("f3",  "show_screen('scanner')",    "Scanner"),
+        Binding("f4",  "show_screen('intruder')",   "Intruder"),
+        Binding("f5",  "show_screen('repeater')",   "Repeater"),
+        Binding("f6",  "show_screen('ai')",         "AI Panel"),
+        Binding("f7",  "show_screen('reports')",    "Reports"),
+        Binding("f8",  "show_screen('decoder')",    "Decoder"),
+        Binding("f9",  "show_screen('comparer')",   "Comparer"),
+        Binding("f10", "show_screen('osint')",      "OSINT"),
+        Binding("f11", "show_screen('spider')",     "Spider",  priority=True),
+        Binding("grave_accent", "show_screen('config')",   "Config",   priority=True),
+        Binding("f12", "show_screen('plugins')",    "Plugins",  priority=True),
+        Binding("ctrl+n", "show_screen('notes')",   "Notes",    priority=True),
+        Binding("ctrl+g", "show_screen('history')", "History",  priority=True),
+        Binding("ctrl+h", "show_help",              "Help",     priority=True),
+        Binding("ctrl+o", "toggle_offline",         "Offline"),
     ]
 
     def __init__(self):
@@ -322,53 +329,47 @@ class HelpScreen(Screen):
     """
 
     HELP_TEXT = """
-# VEXOR v4.0 — Help
+# VEXOR v4.1 — Keyboard Reference
 
-## Navigation Keys
-| Key | Screen |
-|-----|--------|
-| F1  | Dashboard |
-| F2  | Proxy Interceptor |
-| F3  | Scanner |
-| F4  | Intruder |
-| F5  | Repeater |
-| F6  | AI Panel |
-| F7  | Reports |
-| F8  | Decoder |
-| F9  | Comparer |
-| F10 | OSINT Intelligence |
-| ` (backtick) | Config & Settings |
-| F12 | Plugins |
-| Ctrl+H | This Help |
-| Ctrl+O | Toggle Offline Mode |
-| Ctrl+Q | Quit |
+## TUI Navigation
+| Key | Screen | What you can do |
+|-----|--------|-----------------|
+| F1  | Dashboard | Live stats, recent findings, quick start |
+| F2  | Proxy | Start/stop HTTP proxy, MITM toggle, intercept, passive scan |
+| F3  | Scanner | Full/Quick/Custom scan, 35 modules, AI analysis |
+| F4  | Intruder | 4 attack modes, §position§ markers, wordlist |
+| F5  | Repeater | Edit raw HTTP request, send, diff responses |
+| F6  | AI Panel | Analyze, PoC, CVSS, translate, chat |
+| F7  | Reports | Generate HTML/PDF/JSON from session or current scan |
+| F8  | Decoder | Base64/URL/Hex/JWT/HTML/ROT13 |
+| F9  | Comparer | Diff two requests or responses |
+| F10 | OSINT | 6-phase intelligence pipeline |
+| F11 | Spider | JS-aware web crawler, send URLs to Scanner |
+| ` (backtick) | Config | Login/logout, backend URL, scan settings |
+| F12 | Plugins | Plugin manager |
+| Ctrl+N | Notes | Pentest notes, tag by target |
+| Ctrl+G | History | All past DB sessions, load findings, sync to cloud |
+| Ctrl+H | Help | This screen |
+| Ctrl+O | Toggle | Online ↔ Offline mode |
+| Ctrl+Q / Esc | Quit | Exit Vexor |
 
-## Login / Auth
-Press **`** (backtick) to open Config screen.
-Enter email + password → click Login.
-Or use CLI: `vexor auth login`
+## Proxy MITM Setup
+1. Press F2 → check ☑ MITM
+2. Click ▶ Start
+3. Install CA cert shown at top → ~/.vexor/ca/vexor_ca.crt
+4. Chrome: Settings → Privacy → Certificates → Import
+5. Firefox: Settings → Privacy → Certificates → Import
 
-## OSINT Intelligence Engine
-6-Phase pipeline — just enter a target:
-1. Discovery (DNS, CT, WHOIS, passive subs)
-2. Live host check
-3. Deep recon (ports, SSL, crawl)
-4. Secret extraction (API keys, JWT, SQLi params)
-5. Threat intel (Shodan, VT, OTX via backend)
-6. AI correlation (attack chains, threat profile)
+## Intruder Quick Start
+1. Press F2 (Proxy) → select request → → Intruder
+2. Wrap injection points: GET /login?user=§admin§ HTTP/1.1
+3. Pick attack mode: Sniper / Battering Ram / Pitchfork / Cluster Bomb
+4. Load wordlist → Run
 
-## CLI Commands
-```
-vexor                    # Launch TUI
-vexor scan <url>         # Quick scan
-vexor scan <url> --full  # Full scan
-vexor proxy              # Start proxy
-vexor auth login         # Login
-vexor update             # Update Vexor
-vexor --offline          # Offline mode
-```
+## Scan History
+Ctrl+G → select session → view findings → Generate Report or Sync to Cloud
 
-*Vexor v4.0 · Created by Chandan Pandey (Technical)*
+*Vexor v4.1 · Created by Chandan Pandey (Technical)*
 """
 
     def compose(self) -> ComposeResult:

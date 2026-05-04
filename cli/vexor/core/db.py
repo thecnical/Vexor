@@ -294,3 +294,28 @@ async def get_stats() -> dict:
             "critical": critical,
             "high": high,
         }
+
+
+async def get_session_findings(session_id: int) -> list[dict]:
+    """Return all findings for a specific session."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM findings WHERE session_id=? ORDER BY severity, created_at",
+            (session_id,)
+        ) as cursor:
+            rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+
+
+async def get_recent_sessions(limit: int = 10) -> list[dict]:
+    """Return the most recent scan sessions, newest first."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM scan_sessions ORDER BY started_at DESC LIMIT ?",
+            (limit,)
+        ) as cursor:
+            rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+

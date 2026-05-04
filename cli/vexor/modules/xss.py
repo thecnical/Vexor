@@ -596,4 +596,4 @@ class Scanner(BaseScanner):
                 try:
                     await self.get(self.target, headers={header: payload})
                 except Exception:
-                    continue
+                    continue

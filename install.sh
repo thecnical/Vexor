@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 #  VEXOR — AI-Powered CLI Security Toolkit
-#  Installation Script v4.0.0
+#  Installation Script v4.1.0
 #  Created by Chandan Pandey (Technical)
 # ═══════════════════════════════════════════════════════════════
 
@@ -38,7 +38,7 @@ center "${CYAN}╚██╗ ██╔╝██╔══╝   ██╔██╗ 
 center "${CYAN} ╚████╔╝ ███████╗██╔╝ ██╗╚██████╔╝██║  ██║${NC}"
 center "${CYAN}  ╚═══╝  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝${NC}"
 echo ""
-center "${MAGENTA}${BOLD}AI-Powered CLI Security Toolkit  v4.0.0${NC}"
+center "${MAGENTA}${BOLD}AI-Powered CLI Security Toolkit  v4.1.0${NC}"
 center "${DIM}Penetrate. Analyze. Dominate.${NC}"
 center "${DIM}Created by Chandan Pandey (Technical)${NC}"
 center "${DIM}26 Modules · 6-Phase OSINT · AI-Powered${NC}"
@@ -317,7 +317,7 @@ center "${CYAN}═════════════════════�
 echo ""
 
 if command -v vexor &>/dev/null || [[ -f "$VEXOR_BIN" ]]; then
-    center "${GREEN}${BOLD}✓ VEXOR v4.0.0 INSTALLED SUCCESSFULLY!${NC}"
+    center "${GREEN}${BOLD}✓ VEXOR v4.1.0 INSTALLED SUCCESSFULLY!${NC}"
 else
     center "${YELLOW}Run: source ~/.bashrc  then: vexor${NC}"
 fi
@@ -336,5 +336,5 @@ echo ""
 echo -e "  ${DIM}F11 inside TUI → Config & Login${NC}"
 echo -e "  ${DIM}F10 inside TUI → OSINT Intelligence Engine${NC}"
 echo ""
-center "${DIM}Vexor v4.0.0 · Created by Chandan Pandey (Technical)${NC}"
+center "${DIM}Vexor v4.1.0 · Created by Chandan Pandey (Technical)${NC}"
 echo ""

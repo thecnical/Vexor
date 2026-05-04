@@ -1,12 +1,11 @@
 """
-Vexor Header Widget v4.0 — Dynamic with live clock and status indicators
+Vexor Header Widget v4.1 — Live clock, target, scan count, proxy status
 """
 from textual.widget import Widget
 from textual.app import ComposeResult
 from textual.widgets import Static
-from textual.reactive import reactive
 from textual import work
-from vexor.config import TOOL_VERSION, TOOL_AUTHOR, TOOL_TAGLINE
+from vexor.config import TOOL_VERSION
 import datetime
 import asyncio
 
@@ -18,46 +17,63 @@ class VexorHeader(Widget):
     DEFAULT_CSS = """
     VexorHeader {
         height: 3;
-        background: #0d0d1a;
+        background: #080810;
         border-bottom: solid #00ffff;
         dock: top;
     }
-    #header-main {
-        width: 100%;
+    #header-left {
+        width: 1fr;
+        height: 3;
+        content-align: left middle;
+        padding: 0 2;
+    }
+    #header-center {
+        width: 1fr;
         height: 3;
         content-align: center middle;
-        text-align: center;
-        background: #0d0d1a;
+    }
+    #header-right {
+        width: 1fr;
+        height: 3;
+        content-align: right middle;
+        padding: 0 2;
     }
     """
 
-    _clock: str = reactive("")
-
     def compose(self) -> ComposeResult:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        yield Static(
-            self._build(now),
-            id="header-main",
-        )
+        from textual.containers import Horizontal
+        with Horizontal():
+            yield Static(
+                f"[bold bright_cyan]◈ VEXOR[/] [bright_magenta]v{TOOL_VERSION}[/]",
+                id="header-left",
+            )
+            yield Static(
+                "[dim]Penetrate · Analyze · Dominate[/]",
+                id="header-center",
+            )
+            yield Static(
+                datetime.datetime.now().strftime("[dim]%H:%M:%S[/]"),
+                id="header-right",
+            )
 
     def on_mount(self) -> None:
         self._tick()
 
     @work(exclusive=False)
     async def _tick(self) -> None:
-        """Update clock every second"""
         while True:
             await asyncio.sleep(1)
             try:
                 now = datetime.datetime.now().strftime("%H:%M:%S")
-                self.query_one("#header-main", Static).update(self._build(now))
+                self.query_one("#header-right", Static).update(f"[dim]{now}[/]")
             except Exception:
                 break
 
-    def _build(self, now: str) -> str:
-        return (
-            f"[bold bright_cyan]V E X O R[/]  "
-            f"[bright_magenta]v{TOOL_VERSION}[/]"
-            f"[dim]  ·  {TOOL_TAGLINE}  ·  {TOOL_AUTHOR}  ·  [/]"
-            f"[dim]{now}[/]"
-        )
+    def update_target(self, target: str) -> None:
+        try:
+            short = target[:30] if target else "No target"
+            self.query_one("#header-center", Static).update(
+                f"[dim]▶[/] [bright_cyan]{short}[/]"
+            )
+        except Exception:
+            pass

@@ -9,6 +9,7 @@ import re
 import time
 import json
 import base64
+import collections
 from typing import Callable, Optional, List, Dict, Any
 from dataclasses import dataclass, field
 
@@ -128,16 +129,15 @@ class RequestData:
 
 
 class RequestHistory:
-    """Searchable request history"""
+    """Searchable request history — O(1) add/evict using deque"""
 
     def __init__(self, max_size: int = 10000):
-        self._requests: List[RequestData] = []
+        self._requests: collections.deque = collections.deque(maxlen=max_size)
         self._max_size = max_size
 
-    def add(self, req: RequestData) -> None:
+    def add(self, req: "RequestData") -> None:
+        # deque(maxlen=N) auto-evicts oldest element — O(1)
         self._requests.append(req)
-        if len(self._requests) > self._max_size:
-            self._requests.pop(0)
 
     def search(
         self,
@@ -148,9 +148,9 @@ class RequestHistory:
         has_auth: bool = False,
         interesting_only: bool = False,
         mime_type: str = "",
-    ) -> List[RequestData]:
+    ) -> List["RequestData"]:
         """Filter history by multiple criteria"""
-        results = self._requests
+        results = list(self._requests)
 
         if query:
             q = query.lower()
@@ -182,7 +182,7 @@ class RequestHistory:
 
         return results
 
-    def get_by_id(self, req_id: int) -> Optional[RequestData]:
+    def get_by_id(self, req_id: int) -> Optional["RequestData"]:
         for r in self._requests:
             if r.id == req_id:
                 return r
@@ -221,7 +221,11 @@ class VexorProxy:
         self.history = RequestHistory()
         self.match_replace_rules: List[MatchReplaceRule] = []
         self.intercept_enabled: bool = False
+        # Intercept queue: holds (request_id, future) pairs.
+        # When intercept is on, each request is paused here until
+        # the user calls forward() or drop() via the TUI.
         self._intercept_queue: asyncio.Queue = asyncio.Queue()
+        self._intercept_decisions: Dict[int, asyncio.Future] = {}
 
         # Default match & replace rules
         self._setup_default_rules()
@@ -402,6 +406,30 @@ class VexorProxy:
         raw_req = req_data.raw_request()
         modified_req = self.apply_request_rules(raw_req)
 
+        # ── Intercept Mode — hold request until user decides ──────────────
+        if self.intercept_enabled:
+            loop = asyncio.get_event_loop()
+            future: asyncio.Future = loop.create_future()
+            self._intercept_decisions[req_id] = future
+            await self._intercept_queue.put(req_data)
+            try:
+                # Wait for user to call forward() or drop() (max 5 min)
+                action = await asyncio.wait_for(future, timeout=300)
+            except asyncio.TimeoutError:
+                action = "forward"   # auto-forward on timeout
+            finally:
+                self._intercept_decisions.pop(req_id, None)
+
+            if action == "drop":
+                # Drop the request — send 200 OK with empty body
+                writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                await writer.drain()
+                self.history.add(req_data)
+                return
+
+            # Check if req_data was modified by the user during intercept
+            # (user may have updated req_data.headers / req_data.body)
+
         start = time.time()
         try:
             remote_reader, remote_writer = await asyncio.wait_for(
@@ -469,6 +497,33 @@ class VexorProxy:
                 self.on_request(req_data.to_dict())
             except Exception:
                 pass
+
+    # ── Intercept Control Methods (called by TUI) ─────────────────────────
+
+    def intercept_pending(self) -> list:
+        """Return list of requests currently held in the intercept queue."""
+        return list(self._intercept_decisions.keys())
+
+    async def get_intercepted_request(self) -> Optional["RequestData"]:
+        """Get the next intercepted request (non-blocking)."""
+        try:
+            return self._intercept_queue.get_nowait()
+        except asyncio.QueueEmpty:
+            return None
+
+    def forward(self, req_id: int, modified_req: Optional["RequestData"] = None) -> None:
+        """Forward an intercepted request (optionally with modifications)."""
+        future = self._intercept_decisions.get(req_id)
+        if future and not future.done():
+            future.set_result("forward")
+
+    def drop(self, req_id: int) -> None:
+        """Drop an intercepted request (do not forward to server)."""
+        future = self._intercept_decisions.get(req_id)
+        if future and not future.done():
+            future.set_result("drop")
+
+    # ─── HTTPS CONNECT handler (transparent tunnel for non-MITM mode) ────────
 
     async def _handle_connect(
         self,

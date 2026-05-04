@@ -89,7 +89,7 @@ class PluginsScreen(Widget):
             table.clear()
 
             manager = PluginManager()
-            plugins = manager.discover()
+            plugins = manager.list_plugins()
 
             if not plugins:
                 table.add_row("—", "—", "No plugins installed", "—")
