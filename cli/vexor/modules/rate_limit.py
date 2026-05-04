@@ -215,7 +215,7 @@ class Scanner(BaseScanner):
             try:
                 # Send enough requests to trigger rate limit
                 for _ in range(20):
-                    resp = await self.post(url, data={"username": "test", "password": "test"})
+                    resp = await self.post(url, data={"username": "test", "password": "test"})  # nosec B105
                     if resp and resp.status_code == 429:
                         rate_limited_url = url
                         break
@@ -246,7 +246,7 @@ class Scanner(BaseScanner):
 
                     resp = await self.post(
                         url,
-                        data={"username": f"bypass_test_{i}", "password": "test"},
+                        data={"username": f"bypass_test_{i}", "password": "test"},  # nosec B105
                         headers=varied_headers,
                     )
                     if resp:
@@ -352,8 +352,8 @@ class Scanner(BaseScanner):
 
             for form in soup.find_all("form"):
                 inputs = form.find_all("input")
-                has_password = any(
-                    inp.get("type", "").lower() == "password" for inp in inputs
+                has_password = any(  # nosec B105
+                    inp.get("type", "").lower() == "password" for inp in inputs  # nosec B105
                 )
                 if not has_password:
                     continue

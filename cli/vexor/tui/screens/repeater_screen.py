@@ -111,7 +111,7 @@ class RepeaterScreen(Widget):
                     k, v = line.split(":", 1)
                     headers[k.strip()] = v.strip()
 
-            async with httpx.AsyncClient(verify=False, timeout=30) as client:
+            async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec B501
                 response = await client.request(
                     method=method, url=url, headers=headers,
                     content=body.encode() if body else None

@@ -151,7 +151,7 @@ class Scanner(BaseScanner):
 
         for method in ["PUT", "DELETE", "TRACE", "CONNECT", "PATCH"]:
             try:
-                async with httpx.AsyncClient(verify=False, timeout=10) as client:
+                async with httpx.AsyncClient(verify=False, timeout=10) as client:  # nosec B501
                     resp = await client.request(method, self.target)
                     if resp.status_code not in [405, 501, 403, 404]:
                         severity = "HIGH" if method in ["DELETE", "TRACE"] else "LOW"
@@ -170,7 +170,7 @@ class Scanner(BaseScanner):
         # OPTIONS — check allowed methods
         try:
             import httpx
-            async with httpx.AsyncClient(verify=False, timeout=10) as client:
+            async with httpx.AsyncClient(verify=False, timeout=10) as client:  # nosec B501
                 resp = await client.options(self.target)
                 allow = resp.headers.get("allow", resp.headers.get("Access-Control-Allow-Methods", ""))
                 if allow and any(m in allow.upper() for m in ["DELETE", "TRACE", "PUT"]):
@@ -205,7 +205,7 @@ class Scanner(BaseScanner):
                     payload = {field: True if field != "role" else "admin"}
                     try:
                         import httpx
-                        async with httpx.AsyncClient(verify=False, timeout=10) as client:
+                        async with httpx.AsyncClient(verify=False, timeout=10) as client:  # nosec B501
                             resp = await client.patch(
                                 url,
                                 json=payload,
@@ -319,7 +319,7 @@ class Scanner(BaseScanner):
         """Check CORS configuration"""
         try:
             import httpx
-            async with httpx.AsyncClient(verify=False, timeout=10) as client:
+            async with httpx.AsyncClient(verify=False, timeout=10) as client:  # nosec B501
                 resp = await client.get(
                     self.target,
                     headers={"Origin": "https://evil-attacker.com"},

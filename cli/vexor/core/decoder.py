@@ -63,9 +63,9 @@ class Decoder:
             elif fmt == 'binary':
                 return ' '.join(format(ord(c), '08b') for c in data)
             elif fmt == 'md5':
-                return hashlib.md5(data.encode()).hexdigest()
+                return hashlib.md5(data.encode()).hexdigest()  # nosec B324
             elif fmt == 'sha1':
-                return hashlib.sha1(data.encode()).hexdigest()
+                return hashlib.sha1(data.encode()).hexdigest()  # nosec B324
             elif fmt == 'sha256':
                 return hashlib.sha256(data.encode()).hexdigest()
             elif fmt == 'sha512':

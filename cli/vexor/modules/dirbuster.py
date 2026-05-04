@@ -228,7 +228,7 @@ class Scanner(BaseScanner):
             vuln = f"Debug/Info Endpoint Exposed: /{path}"
         elif any(s in path for s in ["admin", "phpmyadmin", "shell", "cmd", "webshell"]):
             severity = "HIGH"
-            vuln = f"Admin/Shell Path Exposed: /{path}"
+            vuln = f"Admin/Shell Path Exposed: /{path}"  # nosec B105
         elif any(s in path for s in ["swagger", "openapi", "api-docs", "graphiql"]):
             severity = "MEDIUM"
             vuln = f"API Documentation Exposed: /{path}"

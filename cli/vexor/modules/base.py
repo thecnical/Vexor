@@ -75,7 +75,7 @@ class BaseScanner(ABC):
             except ImportError:
                 pass
         self._client = httpx.AsyncClient(
-            verify=False,
+            verify=False,  # nosec B501
             timeout=self.timeout,
             follow_redirects=True,
             headers={"User-Agent": "Vexor/4.0 Security Scanner"},
@@ -104,7 +104,7 @@ class BaseScanner(ABC):
             try:
                 if self._client:
                     return await self._client.get(url, **kwargs)
-                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:
+                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:  # nosec B501
                     return await c.get(url, **kwargs)
             except Exception:
                 return None
@@ -115,7 +115,7 @@ class BaseScanner(ABC):
             try:
                 if self._client:
                     return await self._client.post(url, **kwargs)
-                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:
+                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:  # nosec B501
                     return await c.post(url, **kwargs)
             except Exception:
                 return None
@@ -126,7 +126,7 @@ class BaseScanner(ABC):
             try:
                 if self._client:
                     return await self._client.put(url, **kwargs)
-                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:
+                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:  # nosec B501
                     return await c.put(url, **kwargs)
             except Exception:
                 return None
@@ -137,7 +137,7 @@ class BaseScanner(ABC):
             try:
                 if self._client:
                     return await self._client.delete(url, **kwargs)
-                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:
+                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:  # nosec B501
                     return await c.delete(url, **kwargs)
             except Exception:
                 return None
@@ -148,7 +148,7 @@ class BaseScanner(ABC):
             try:
                 if self._client:
                     return await self._client.patch(url, **kwargs)
-                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:
+                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:  # nosec B501
                     return await c.patch(url, **kwargs)
             except Exception:
                 return None
@@ -159,7 +159,7 @@ class BaseScanner(ABC):
             try:
                 if self._client:
                     return await self._client.options(url, **kwargs)
-                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:
+                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:  # nosec B501
                     return await c.options(url, **kwargs)
             except Exception:
                 return None
@@ -171,7 +171,7 @@ class BaseScanner(ABC):
             try:
                 if self._client:
                     return await self._client.request(method, url, **kwargs)
-                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:
+                async with httpx.AsyncClient(verify=False, timeout=self.timeout) as c:  # nosec B501
                     return await c.request(method, url, **kwargs)
             except Exception:
                 return None

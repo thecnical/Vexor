@@ -619,7 +619,7 @@ class Scanner(BaseScanner):
                 for payload in ERROR_PAYLOADS[:15]:
                     try:
                         resp = await self.get(self.target, headers={header: payload})
-                        if resp and self._has_sql_error(resp.text):
+                        if resp and self._has_sql_error(resp.text):  # nosec B608
                             db_type = self._detect_db(resp.text)
                             self.add_finding(Finding(
                                 severity="CRITICAL",

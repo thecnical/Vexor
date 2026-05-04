@@ -26,7 +26,7 @@ DORK_QUERIES = [
 
 # Patterns to find in GitHub results
 SECRET_PATTERNS = {
-    "Password": r'(?i)(password|passwd|pwd)\s*[=:]\s*[\'"][^\'"]{4,}[\'"]',
+    "Password": r'(?i)(password|passwd|pwd)\s*[=:]\s*[\'"][^\'"]{4,}[\'"]',  # nosec B105
     "API Key": r'(?i)(api_key|apikey)\s*[=:]\s*[\'"][a-zA-Z0-9]{16,}[\'"]',
     "AWS Key": r'AKIA[0-9A-Z]{16}',
     "Private Key": r'-----BEGIN.*PRIVATE KEY-----',

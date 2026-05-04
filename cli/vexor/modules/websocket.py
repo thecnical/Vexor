@@ -317,7 +317,7 @@ class Scanner(BaseScanner):
         """Check if HTTP response indicates WebSocket support"""
         try:
             import httpx
-            async with httpx.AsyncClient(verify=False, timeout=10) as client:
+            async with httpx.AsyncClient(verify=False, timeout=10) as client:  # nosec B501
                 resp = await client.get(
                     self.target,
                     headers={

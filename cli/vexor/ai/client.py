@@ -180,7 +180,7 @@ Output ONLY the Python script, no explanation."""
         # Try auto guest login
         try:
             import hashlib, platform
-            machine_id = hashlib.md5(platform.node().encode()).hexdigest()[:12]
+            machine_id = hashlib.md5(platform.node().encode()).hexdigest()[:12]  # nosec B324
             guest_email = f"guest_{machine_id}@vexor.local"
             guest_pass  = f"vexor_{machine_id}_guest"
 

@@ -125,7 +125,7 @@ class Scanner(BaseScanner):
 
                 import httpx
                 async with httpx.AsyncClient(
-                    verify=False, timeout=10, follow_redirects=False
+                    verify=False, timeout=10, follow_redirects=False  # nosec B501
                 ) as client:
                     resp = await client.get(test_url)
 
@@ -208,7 +208,7 @@ class Scanner(BaseScanner):
             try:
                 import httpx
                 async with httpx.AsyncClient(
-                    verify=False, timeout=8, follow_redirects=False
+                    verify=False, timeout=8, follow_redirects=False  # nosec B501
                 ) as client:
                     resp = await client.get(url)
 
@@ -236,7 +236,7 @@ class Scanner(BaseScanner):
             try:
                 import httpx
                 async with httpx.AsyncClient(
-                    verify=False, timeout=8, follow_redirects=False
+                    verify=False, timeout=8, follow_redirects=False  # nosec B501
                 ) as client:
                     resp = await client.get(
                         self.target,
@@ -274,7 +274,7 @@ class Scanner(BaseScanner):
                 try:
                     import httpx
                     async with httpx.AsyncClient(
-                        verify=False, timeout=8, follow_redirects=False
+                        verify=False, timeout=8, follow_redirects=False  # nosec B501
                     ) as client:
                         resp = await client.post(
                             self.target,

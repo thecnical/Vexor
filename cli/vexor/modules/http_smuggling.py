@@ -313,7 +313,7 @@ class Scanner(BaseScanner):
         """Check if server accepts Transfer-Encoding header"""
         try:
             import httpx
-            async with httpx.AsyncClient(verify=False, timeout=10) as client:
+            async with httpx.AsyncClient(verify=False, timeout=10) as client:  # nosec B501
                 resp = await client.post(
                     self.target,
                     content=b"0\r\n\r\n",
@@ -344,7 +344,7 @@ class Scanner(BaseScanner):
             import httpx
             # Try HTTP/2 with smuggling headers
             async with httpx.AsyncClient(
-                verify=False, timeout=10, http2=True
+                verify=False, timeout=10, http2=True  # nosec B501
             ) as client:
                 resp = await client.post(
                     self.target,

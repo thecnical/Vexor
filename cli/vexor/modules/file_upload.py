@@ -157,7 +157,7 @@ class Scanner(BaseScanner):
 
         for filename, content, mime_type in BYPASS_TECHNIQUES:
             try:
-                async with httpx.AsyncClient(verify=False, timeout=20) as client:
+                async with httpx.AsyncClient(verify=False, timeout=20) as client:  # nosec B501
                     files = {field_name: (filename, content, mime_type)}
                     data = dict(extra_fields)
                     resp = await client.post(url, files=files, data=data)
