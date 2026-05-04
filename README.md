@@ -18,7 +18,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Platform](https://img.shields.io/badge/Kali%20Linux-Native-557C94?style=for-the-badge&logo=kalilinux&logoColor=white)](https://kali.org)
 [![License](https://img.shields.io/badge/License-MIT-00D26A?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-4.1.0-00FFFF?style=for-the-badge)](https://github.com/thecnical/Vexor/releases)
+[![Version](https://img.shields.io/badge/Version-4.2.0-00FFFF?style=for-the-badge)](https://github.com/thecnical/Vexor/releases)
 
 > **Vexor** is a full-featured, TUI-first security toolkit that lives entirely in your terminal.  
 > No Java. No GUI. No $475/year license. Just type `vexor` and start hacking.
@@ -163,7 +163,7 @@ Vexor is **TUI-first**. Running `vexor` launches a full terminal UI built with [
 
 ## Why Vexor?
 
-| Feature | Burp Community | Burp Pro ($475/yr) | **Vexor v4.1 (Free)** |
+| Feature | Burp Community | Burp Pro ($475/yr) | **Vexor v4.2 (Free)** |
 |:--------|:---:|:---:|:---:|
 | TUI — works over SSH, no GUI needed | ❌ | ❌ | ✅ |
 | Automated Vulnerability Scanner | ❌ | ✅ | ✅ **35 modules** |
@@ -194,6 +194,9 @@ Vexor is **TUI-first**. Running `vexor` launches a full terminal UI built with [
 git clone https://github.com/thecnical/Vexor && cd Vexor && ./install.sh
 ```
 
+> **Note:** Clone wherever you want. The installer detects the path automatically.
+> Common locations: `/home/kali/Vexor` ? `/root/Vexor` ? `~/Vexor`
+
 ### WSL / Windows
 
 ```powershell
@@ -211,8 +214,11 @@ git clone https://github.com/thecnical/Vexor && cd Vexor && ./install.sh
 
 ```bash
 vexor update
-# or manually:
-cd ~/Vexor && git pull && ./install.sh
+# or manually (use YOUR actual Vexor path):
+cd /home/kali/Vexor && git pull && ./install.sh
+# or if cloned as root:
+cd /root/Vexor && git pull && ./install.sh
+# tip: run 'find / -name install.sh -path "*/Vexor/*" 2>/dev/null' to find it
 ```
 
 ### Optional Go Tools (full OSINT power)
