@@ -214,7 +214,7 @@ class VexorApp(App):
 
     BINDINGS = [
         Binding("ctrl+q", "quit",                   "Quit",    priority=True),
-        Binding("escape", "quit",                   "Quit",    priority=True),
+        # escape handled in on_key
         Binding("f1",  "show_screen('dashboard')",  "Dashboard"),
         Binding("f2",  "show_screen('proxy')",      "Proxy"),
         Binding("f3",  "show_screen('scanner')",    "Scanner"),
@@ -297,7 +297,13 @@ class VexorApp(App):
             pass
 
     def on_key(self, event) -> None:
+        if event.key == "ctrl+h":
             self.push_screen(HelpScreen())
+        elif event.key == "escape":
+            if len(self.screen_stack) > 1:
+                self.pop_screen()
+            else:
+                self.exit()
 
     def action_show_help(self) -> None:
         self.push_screen(HelpScreen())
@@ -315,7 +321,11 @@ class VexorApp(App):
 
 
 class HelpScreen(Screen):
-    BINDINGS = [Binding("escape", "dismiss", "Close")]
+    BINDINGS = [
+        Binding("escape", "dismiss", "Close", priority=True),
+        Binding("q", "dismiss", "Close", priority=True),
+        Binding("ctrl+h", "dismiss", "Close", priority=True),
+    ]
 
     CSS = """
     HelpScreen {
@@ -332,7 +342,9 @@ class HelpScreen(Screen):
     """
 
     HELP_TEXT = """
-# VEXOR v4.1 — Keyboard Reference
+# VEXOR v4.2 — Keyboard Reference
+
+> **Press Escape, Q, or Ctrl+H to close this help screen**
 
 ## TUI Navigation
 | Key | Screen | What you can do |

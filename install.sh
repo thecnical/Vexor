@@ -101,7 +101,6 @@ APT_PKGS=(
     python3-aiofiles
     python3-scapy
     mitmproxy
-    python3-mitmproxy
     # System tools
     nmap
     openssl
@@ -116,7 +115,7 @@ APT_PKGS=(
     libcairo2
     libpango-1.0-0
     libpangocairo-1.0-0
-    libgdk-pixbuf2.0-0
+    libgdk-pixbuf-2.0-0
     shared-mime-info
     curl
     git
@@ -130,6 +129,11 @@ for pkg in "${APT_PKGS[@]}"; do
         echo -e "${GREEN}    ✓ $pkg${NC}" || \
         echo -e "${DIM}    - $pkg (skipped)${NC}"
 done
+
+# mitmproxy -- pip fallback
+if ! $PYTHON_CMD -c import_mitmproxy_test 2>/dev/null; then
+    $PIP_CMD install mitmproxy $PIP_FLAGS 2>/dev/null
+fi
 
 # ─── pip packages (only what apt doesn't have) ──────────────
 echo -e "${CYAN}[3/6] Installing remaining pip packages...${NC}"
@@ -224,19 +228,23 @@ else
         echo -e "${DIM}    - nmap (skipped)${NC}"
 fi
 
-# findomain
+# findomain -- detect CPU arch, download correct binary
 if ! command -v findomain &>/dev/null; then
-    echo -e "${CYAN}    Installing findomain...${NC}"
-    FINDOMAIN_URL="https://github.com/Findomain/Findomain/releases/latest/download/findomain-linux-i386.zip"
-    wget -q "$FINDOMAIN_URL" -O /tmp/findomain.zip 2>/dev/null && \
-        unzip -q /tmp/findomain.zip -d /tmp/ 2>/dev/null && \
-        chmod +x /tmp/findomain && \
-        sudo mv /tmp/findomain /usr/local/bin/ 2>/dev/null && \
-        echo -e "${GREEN}    ✓ findomain${NC}" || \
-        echo -e "${DIM}    - findomain (skipped — install manually)${NC}"
-    rm -f /tmp/findomain.zip 2>/dev/null
+    ARCH=$(uname -m)
+    case $ARCH in
+        x86_64)        FD_BIN=findomain-linux ;;
+        aarch64|arm64) FD_BIN=findomain-aarch64 ;;
+        armv7*)        FD_BIN=findomain-armv7 ;;
+        *)             FD_BIN=findomain-linux ;;
+    esac
+    FD_URL=https://github.com/Findomain/Findomain/releases/latest/download/$FD_BIN
+    wget -q $FD_URL -O /tmp/findomain 2>/dev/null \
+        && chmod +x /tmp/findomain \
+        && sudo mv /tmp/findomain /usr/local/bin/ \
+        && echo findomain-ok-$ARCH \
+        || echo findomain-skipped
 else
-    echo -e "${GREEN}    ✓ findomain (already installed)${NC}"
+    echo findomain-already-installed
 fi
 
 # Go tools — only if Go is installed
