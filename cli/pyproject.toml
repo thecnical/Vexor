@@ -40,7 +40,7 @@ dependencies = [
     # Security & Crypto
     "pyjwt>=2.8.0",
     "cryptography>=42.0.0",
-    "pyOpenSSL>=24.0.0",
+    "pyOpenSSL>=24.2.0",
 
     # Data & Config
     "jinja2>=3.1.0",

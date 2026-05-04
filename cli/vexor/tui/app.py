@@ -225,7 +225,7 @@ class VexorApp(App):
         Binding("f8",  "show_screen('decoder')",    "Decoder"),
         Binding("f9",  "show_screen('comparer')",   "Comparer"),
         Binding("f10", "show_screen('osint')",      "OSINT"),
-        Binding("f11", "show_screen('spider')",     "Spider",  priority=True),
+        Binding("ctrl+s", "show_screen('spider')",     "Spider",  priority=True),
         Binding("grave_accent", "show_screen('config')",   "Config",   priority=True),
         Binding("f12", "show_screen('plugins')",    "Plugins",  priority=True),
         Binding("ctrl+n", "show_screen('notes')",   "Notes",    priority=True),
@@ -296,6 +296,9 @@ class VexorApp(App):
         except Exception:
             pass
 
+    def on_key(self, event) -> None:
+            self.push_screen(HelpScreen())
+
     def action_show_help(self) -> None:
         self.push_screen(HelpScreen())
 
@@ -344,7 +347,7 @@ class HelpScreen(Screen):
 | F8  | Decoder | Base64/URL/Hex/JWT/HTML/ROT13 |
 | F9  | Comparer | Diff two requests or responses |
 | F10 | OSINT | 6-phase intelligence pipeline |
-| F11 | Spider | JS-aware web crawler, send URLs to Scanner |
+| Ctrl+S | Spider | JS-aware web crawler, send URLs to Scanner |
 | ` (backtick) | Config | Login/logout, backend URL, scan settings |
 | F12 | Plugins | Plugin manager |
 | Ctrl+N | Notes | Pentest notes, tag by target |

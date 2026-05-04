@@ -51,7 +51,7 @@ class VexorStatusBar(Widget):
             f"[dim]Findings:[/] [bright_red]{self._findings}[/]  "
             f"[dim]Scans:[/] [bright_cyan]{self._scans}[/]"
         )
-        shortcuts = "[dim]F1-F10 Nav · ` Config · Ctrl+N Notes · Ctrl+H Help · Ctrl+Q Quit[/]"
+        shortcuts = "[dim]F1-F10 Nav · Ctrl+S Spider · ` Config · Ctrl+N Notes · Ctrl+H Help · Ctrl+Q Quit[/]"
 
         return (
             f"{conn}  [dim]│[/]  {mode}  [dim]│[/]  "

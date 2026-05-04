@@ -25,7 +25,7 @@ TOOL_ITEMS = [
     ("decoder",  "F8",      "🔐", "Decoder"),
     ("comparer", "F9",      "⚖", "Comparer"),
     ("osint",    "F10",     "🕵", "OSINT"),
-    ("spider",   "F11",     "🕷", "Spider"),
+    ("spider",   "Ctrl+S",     "🕷", "Spider"),
     ("history",  "Ctrl+G",  "📋", "History"),
 ]
 

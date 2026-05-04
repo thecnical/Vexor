@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 #  VEXOR — AI-Powered CLI Security Toolkit
-#  Installation Script v4.1.0
+#  Installation Script v4.2.0
 #  Created by Chandan Pandey (Technical)
 # ═══════════════════════════════════════════════════════════════
 
@@ -38,7 +38,7 @@ center "${CYAN}╚██╗ ██╔╝██╔══╝   ██╔██╗ 
 center "${CYAN} ╚████╔╝ ███████╗██╔╝ ██╗╚██████╔╝██║  ██║${NC}"
 center "${CYAN}  ╚═══╝  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝${NC}"
 echo ""
-center "${MAGENTA}${BOLD}AI-Powered CLI Security Toolkit  v4.1.0${NC}"
+center "${MAGENTA}${BOLD}AI-Powered CLI Security Toolkit  v4.2.0${NC}"
 center "${DIM}Penetrate. Analyze. Dominate.${NC}"
 center "${DIM}Created by Chandan Pandey (Technical)${NC}"
 center "${DIM}26 Modules · 6-Phase OSINT · AI-Powered${NC}"
@@ -49,6 +49,23 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ─── Python ─────────────────────────────────────────────────
+# Auto-update from GitHub
+echo -e "${CYAN}[0/6] Checking for updates from GitHub...${NC}"
+if git -C "$SCRIPT_DIR" rev-parse --git-dir &>/dev/null; then
+    git -C "$SCRIPT_DIR" fetch origin main --quiet 2>/dev/null
+    LOCAL=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null)
+    REMOTE=$(git -C "$SCRIPT_DIR" rev-parse origin/main 2>/dev/null)
+    if [[ "$LOCAL" != "$REMOTE" ]]; then
+        echo -e "${CYAN}    New version found - pulling latest...${NC}"
+        git -C "$SCRIPT_DIR" pull origin main --quiet 2>/dev/null
+        echo -e "${GREEN}    Updated to latest!${NC}"
+    else
+        echo -e "${GREEN}    Already up to date${NC}"
+    fi
+else
+    echo -e "${DIM}    Not a git repo - skipping auto-update${NC}"
+fi
+
 echo -e "${CYAN}[1/6] Checking Python...${NC}"
 PYTHON_CMD=""
 for cmd in python3.13 python3.12 python3.11 python3; do
@@ -317,7 +334,7 @@ center "${CYAN}═════════════════════�
 echo ""
 
 if command -v vexor &>/dev/null || [[ -f "$VEXOR_BIN" ]]; then
-    center "${GREEN}${BOLD}✓ VEXOR v4.1.0 INSTALLED SUCCESSFULLY!${NC}"
+    center "${GREEN}${BOLD}✓ VEXOR v4.2.0 INSTALLED SUCCESSFULLY!${NC}"
 else
     center "${YELLOW}Run: source ~/.bashrc  then: vexor${NC}"
 fi
@@ -336,5 +353,5 @@ echo ""
 echo -e "  ${DIM}F11 inside TUI → Config & Login${NC}"
 echo -e "  ${DIM}F10 inside TUI → OSINT Intelligence Engine${NC}"
 echo ""
-center "${DIM}Vexor v4.1.0 · Created by Chandan Pandey (Technical)${NC}"
+center "${DIM}Vexor v4.2.0 · Created by Chandan Pandey (Technical)${NC}"
 echo ""
