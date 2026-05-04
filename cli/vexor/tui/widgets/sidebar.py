@@ -162,7 +162,6 @@ class VexorSidebar(Widget):
     .sidebar-section-header:hover {
         background: #12122a;
         color: #00ffff;
-        cursor: pointer;
     }
     .sidebar-item {
         padding: 0 2;
@@ -172,7 +171,6 @@ class VexorSidebar(Widget):
     .sidebar-item:hover {
         background: #12122a;
         color: #00ffff;
-        cursor: pointer;
     }
     .sidebar-item.active {
         background: #0d1a2a;
