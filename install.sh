@@ -241,45 +241,80 @@ if ! command -v findomain &>/dev/null; then
     wget -q $FD_URL -O /tmp/findomain 2>/dev/null \
         && chmod +x /tmp/findomain \
         && sudo mv /tmp/findomain /usr/local/bin/ \
-        && echo findomain-ok-$ARCH \
-        || echo findomain-skipped
+        && echo -e "${GREEN}    ✓ findomain ($ARCH)${NC}" \
+        || echo -e "${YELLOW}    ! findomain (skipped)${NC}"
 else
-    echo findomain-already-installed
+    echo -e "${GREEN}    ✓ findomain (already installed)${NC}"
 fi
 
-# Go tools — only if Go is installed
+# Go tools -- auto-install Go if missing, then install all OSINT tools
+if ! command -v go &>/dev/null; then
+    echo -e "${CYAN}    Go not found -- auto-installing Go...${NC}"
+    GO_ARCH=$(uname -m)
+    case $GO_ARCH in
+        x86_64)  GO_PKG="go1.22.4.linux-amd64.tar.gz" ;;
+        aarch64) GO_PKG="go1.22.4.linux-arm64.tar.gz" ;;
+        armv7*)  GO_PKG="go1.22.4.linux-armv6l.tar.gz" ;;
+        *)       GO_PKG="go1.22.4.linux-amd64.tar.gz" ;;
+    esac
+    GO_URL="https://go.dev/dl/${GO_PKG}"
+    echo -e "${CYAN}    Downloading $GO_PKG...${NC}"
+    if wget -q "$GO_URL" -O /tmp/go.tar.gz 2>/dev/null; then
+        sudo rm -rf /usr/local/go
+        sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+        rm -f /tmp/go.tar.gz
+        export PATH=$PATH:/usr/local/go/bin
+        echo -e "${GREEN}    ✓ Go installed ($GO_ARCH)${NC}"
+    else
+        echo -e "${YELLOW}    ! wget failed -- trying apt...${NC}"
+        sudo apt-get install -y -qq golang-go 2>/dev/null \
+            && export PATH=$PATH:/usr/local/go/bin \
+            && echo -e "${GREEN}    ✓ Go installed (apt)${NC}" \
+            || echo -e "${RED}    ✗ Go install failed${NC}"
+    fi
+else
+    echo -e "${GREEN}    ✓ Go already installed${NC}"
+fi
+
+# Install Go OSINT tools (Go should be available now)
 if command -v go &>/dev/null; then
-    echo -e "${CYAN}    Go detected — installing OSINT tools...${NC}"
+    echo -e "${CYAN}    Installing Go OSINT tools...${NC}"
     export GOPATH="$HOME/go"
     export PATH="$GOPATH/bin:$PATH"
 
-    go install github.com/tomnomnom/assetfinder@latest 2>/dev/null && \
-        echo -e "${GREEN}    ✓ assetfinder${NC}" || \
-        echo -e "${DIM}    - assetfinder (skipped)${NC}"
+    go install github.com/tomnomnom/assetfinder@latest 2>/dev/null \
+        && echo -e "${GREEN}    ✓ assetfinder${NC}" \
+        || echo -e "${YELLOW}    ! assetfinder (skipped)${NC}"
 
-    go install github.com/hakluke/hakrawler@latest 2>/dev/null && \
-        echo -e "${GREEN}    ✓ hakrawler${NC}" || \
-        echo -e "${DIM}    - hakrawler (skipped)${NC}"
+    go install github.com/hakluke/hakrawler@latest 2>/dev/null \
+        && echo -e "${GREEN}    ✓ hakrawler${NC}" \
+        || echo -e "${YELLOW}    ! hakrawler (skipped)${NC}"
 
-    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>/dev/null && \
-        echo -e "${GREEN}    ✓ nuclei${NC}" && \
-        nuclei -update-templates -silent 2>/dev/null && \
-        echo -e "${GREEN}    ✓ nuclei templates updated${NC}" || \
-        echo -e "${DIM}    - nuclei (skipped)${NC}"
+    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>/dev/null \
+        && echo -e "${GREEN}    ✓ nuclei${NC}" \
+        || echo -e "${YELLOW}    ! nuclei (skipped)${NC}"
 
-    go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>/dev/null && \
-        echo -e "${GREEN}    ✓ subfinder${NC}" || \
-        echo -e "${DIM}    - subfinder (skipped)${NC}"
+    go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>/dev/null \
+        && echo -e "${GREEN}    ✓ subfinder${NC}" \
+        || echo -e "${YELLOW}    ! subfinder (skipped)${NC}"
 
-    # Add GOPATH/bin to PATH permanently
-    if ! grep -q 'GOPATH/bin' "$SHELL_RC" 2>/dev/null; then
-        echo 'export PATH="$HOME/go/bin:$PATH"' >> "$SHELL_RC"
+    go install github.com/projectdiscovery/httpx/cmd/httpx@latest 2>/dev/null \
+        && echo -e "${GREEN}    ✓ httpx (ProjectDiscovery)${NC}" \
+        || echo -e "${YELLOW}    ! httpx (skipped)${NC}"
+
+    if command -v nuclei &>/dev/null; then
+        nuclei -update-templates -silent 2>/dev/null \
+            && echo -e "${GREEN}    ✓ nuclei templates updated${NC}"
     fi
-else
-    echo -e "${DIM}    - Go not found — skipping assetfinder/hakrawler${NC}"
-    echo -e "${DIM}      Install Go: https://go.dev/dl/ then re-run install.sh${NC}"
-fi
 
+    SHELL_RC_GO="$HOME/.bashrc"
+    [[ -f "$HOME/.zshrc" ]] && SHELL_RC_GO="$HOME/.zshrc"
+    grep -q /usr/local/go/bin "$SHELL_RC_GO" 2>/dev/null \
+        || echo export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin >> "$SHELL_RC_GO"
+    echo -e "${GREEN}    ✓ Go PATH saved to $SHELL_RC_GO${NC}"
+else
+    echo -e "${RED}    ✗ Go unavailable -- Go tools skipped${NC}"
+fi
 
 echo -e "${CYAN}[6/6] Setting up vexor command...${NC}"
 
