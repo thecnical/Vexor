@@ -230,19 +230,26 @@ fi
 
 # findomain -- detect CPU arch, download correct binary
 if ! command -v findomain &>/dev/null; then
+    echo -e "${CYAN}    Installing findomain...${NC}"
     ARCH=$(uname -m)
     case $ARCH in
-        x86_64)        FD_BIN=findomain-linux ;;
-        aarch64|arm64) FD_BIN=findomain-aarch64 ;;
-        armv7*)        FD_BIN=findomain-armv7 ;;
-        *)             FD_BIN=findomain-linux ;;
+        x86_64)        FD_BIN="findomain-linux" ;;
+        aarch64|arm64) FD_BIN="findomain-aarch64" ;;
+        armv7*)        FD_BIN="findomain-armv7" ;;
+        *)             FD_BIN="findomain-linux" ;;
     esac
-    FD_URL=https://github.com/Findomain/Findomain/releases/latest/download/$FD_BIN
-    wget -q $FD_URL -O /tmp/findomain 2>/dev/null \
-        && chmod +x /tmp/findomain \
-        && sudo mv /tmp/findomain /usr/local/bin/ \
-        && echo -e "${GREEN}    ✓ findomain ($ARCH)${NC}" \
-        || echo -e "${YELLOW}    ! findomain (skipped)${NC}"
+    FD_URL="https://github.com/Findomain/Findomain/releases/latest/download/${FD_BIN}"
+    # Use curl with -fsSL to follow GitHub redirects
+    if curl -fsSL "$FD_URL" -o /tmp/findomain 2>/dev/null; then
+        chmod +x /tmp/findomain
+        sudo mv /tmp/findomain /usr/local/bin/
+        echo -e "${GREEN}    ✓ findomain ($ARCH)${NC}"
+    else
+        # curl failed -- try apt as fallback
+        sudo apt-get install -y -qq findomain 2>/dev/null \
+            && echo -e "${GREEN}    ✓ findomain (apt)${NC}" \
+            || echo -e "${YELLOW}    ! findomain (skipped -- install manually)${NC}"
+    fi
 else
     echo -e "${GREEN}    ✓ findomain (already installed)${NC}"
 fi
@@ -290,9 +297,16 @@ if command -v go &>/dev/null; then
         && echo -e "${GREEN}    ✓ hakrawler${NC}" \
         || echo -e "${YELLOW}    ! hakrawler (skipped)${NC}"
 
-    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>/dev/null \
-        && echo -e "${GREEN}    ✓ nuclei${NC}" \
-        || echo -e "${YELLOW}    ! nuclei (skipped)${NC}"
+    # nuclei -- try v3, then apt, then v2
+    if go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>/dev/null; then
+        echo -e "${GREEN}    ✓ nuclei (v3)${NC}"
+    elif sudo apt-get install -y -qq nuclei 2>/dev/null; then
+        echo -e "${GREEN}    ✓ nuclei (apt)${NC}"
+    elif go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest 2>/dev/null; then
+        echo -e "${GREEN}    ✓ nuclei (v2)${NC}"
+    else
+        echo -e "${YELLOW}    ! nuclei (skipped -- install manually: go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest)${NC}"
+    fi
 
     go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 2>/dev/null \
         && echo -e "${GREEN}    ✓ subfinder${NC}" \
